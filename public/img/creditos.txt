@@ -1,0 +1,28 @@
+Fotos de dominio público (CC0 / Public Domain Mark), obtenidas con Openverse (openverse.org).
+No requieren atribución; se listan como referencia.
+
+archivo | título | autor | licencia | origen
+productos/pc-gamer.jpg | AR production d&b audiotechnik studio | desconocido | CC0 | https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvZmw1MDU1MDI3NzExOC1pbWFnZS1reWNpcWV6ay5qcGc.jpg
+productos/pc-oficina.jpg | Seo Ppc | Serpstat | CC0 | https://cdn.stocksnap.io/img-thumbs/960w/9699Y6WKLD.jpg
+productos/notebook-lenovo.jpg | Macbook Laptop | Marc Chouinard | CC0 | https://cdn.stocksnap.io/img-thumbs/960w/DUAHA1V312.jpg
+productos/notebook-asus.jpg | Laptop Keyboard | One Idea LLC | CC0 | https://cdn.stocksnap.io/img-thumbs/960w/QGU10TMNPE.jpg
+productos/audifonos-hyperx.jpg | Beats Headphones | Michal Kulesza | CC0 | https://cdn.stocksnap.io/img-thumbs/960w/7B62IKGVF4.jpg
+productos/parlante-jbl.jpg | Black portable speaker drop zone | desconocido | CC0 | https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvYnM0ODAtaW1hZ2Uta3d5dDZnOWguanBn.jpg
+productos/teclado-redragon.jpg | Keyboard Computer | Jaroslaw%20Puszczy%u0144ski | CC0 | https://cdn.stocksnap.io/img-thumbs/960w/FFPJ3S8U5Y.jpg
+productos/mouse-logitech.jpg | Mouse Computer | Damian Dulisz | CC0 | https://cdn.stocksnap.io/img-thumbs/960w/T4ON307LSL.jpg
+productos/monitor-samsung.jpg | Computer Monitors | Tran Mau Tri Tam | CC0 | https://cdn.stocksnap.io/img-thumbs/960w/SLZRDLFT96.jpg
+productos/monitor-lg.jpg | Tv Monitor | John Sting | CC0 | https://cdn.stocksnap.io/img-thumbs/960w/SJFSX4247L.jpg
+productos/tarjeta-video.jpg | Graphics Card Upgrading | keijiro-tk | CC0 | https://live.staticflickr.com/65535/49259431802_bf8d8aa870_b.jpg
+productos/ssd-kingston.jpg | My new OWC SSD 3G disk | D Coetzee | CC0 | https://live.staticflickr.com/7067/6943642450_673beed050_b.jpg
+categorias/computadores.jpg | Desktop Computer | Dave Meier | CC0 | https://cdn.stocksnap.io/img-thumbs/960w/B4145FFE64.jpg
+categorias/notebooks.jpg | Macbook Laptop | Wilfred Iven | CC0 | https://cdn.stocksnap.io/img-thumbs/960w/RMATTE7HXJ.jpg
+categorias/audio.jpg | Headphones Audio | Corey Blaz | CC0 | https://cdn.stocksnap.io/img-thumbs/960w/1Y69ONYCCZ.jpg
+categorias/perifericos.jpg | Iphone Keyboard | Bridget Braun | CC0 | https://cdn.stocksnap.io/img-thumbs/960w/R7GVMRJWW9.jpg
+categorias/monitores.jpg | Apple Mac | Volkan Olmez | CC0 | https://cdn.stocksnap.io/img-thumbs/960w/0061559E5D.jpg
+categorias/componentes.jpg | Motherboard Circuits | JESHOOTS.com | CC0 | https://cdn.stocksnap.io/img-thumbs/960w/66EE6E64A5.jpg
+blogs/notebook-o-pc.jpg | Macbook Laptop | Skitter Photo | CC0 | https://cdn.stocksnap.io/img-thumbs/960w/CJSRRVR4JE.jpg
+blogs/setup.jpg | iPhone pair headphones small speaker | desconocido | CC0 | https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIyLTA0L3Vwd2s2MTY4MzUyNC13aWtpbWVkaWEtaW1hZ2Uta293cjRpaWcuanBn.jpg
+carrusel/lanzamientos.jpg | Macbook Laptop | Lia Leslie | CC0 | https://cdn.stocksnap.io/img-thumbs/960w/DWLWL9USBG.jpg
+carrusel/ofertas.jpg | Headphones Audio | %C1lvaro%20Bernal | CC0 | https://cdn.stocksnap.io/img-thumbs/960w/WM2HLLDW0K.jpg
+carrusel/setup.jpg | Black keyboard working desk | desconocido | CC0 | https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIyLTA0L3Vwd2s2MTgwMjg5My13aWtpbWVkaWEtaW1hZ2Uta293cTdzOTIuanBn.jpg
+nosotros.jpg | Photoshop Graphicdesign | Startup Stock Photos | CC0 | https://cdn.stocksnap.io/img-thumbs/960w/JA1HKXSB6M.jpg

@@ -1,0 +1,193 @@
+/* Colores y tipografías del header y footer */
+:root {
+  --zt-azul: #0b1f33;
+  --zt-azul-claro: #16314d;
+  --zt-acento: #f97316;
+  --zt-texto-suave: #c9d3de;
+}
+
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+}
+
+.zt-logo {
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  font-size: 1.35rem;
+  letter-spacing: 1px;
+  color: #fff;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.zt-logo:hover {
+  color: #fff;
+}
+
+.zt-punto {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--zt-acento);
+}
+
+/* Header */
+.zt-header {
+  background: var(--zt-azul);
+}
+
+.zt-header .navbar-nav .nav-link {
+  color: var(--zt-texto-suave);
+  font-weight: 500;
+}
+.zt-header .navbar-nav .nav-link:hover,
+.zt-header .navbar-nav .nav-link.active {
+  color: #fff;
+}
+
+/* La página actual se marca con una línea naranja abajo */
+@media (min-width: 1200px) {
+  .zt-header .navbar {
+    padding-block: 0;
+  }
+  .zt-header .navbar-nav .nav-link {
+    padding: 1.4rem 0.45rem 1.25rem;
+  }
+  .zt-header .navbar-nav .nav-link.active {
+    box-shadow: inset 0 -3px 0 var(--zt-acento);
+  }
+}
+
+.zt-buscador {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  border-radius: 8px;
+  background: var(--zt-azul-claro);
+}
+.zt-buscador input {
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: #fff;
+  width: 100%;
+  min-width: 0;
+  padding-right: 12px;
+}
+.zt-buscador input::placeholder {
+  color: #8fa3b8;
+}
+.zt-buscador:focus-within {
+  outline: 2px solid var(--zt-acento);
+}
+.zt-buscador-boton {
+  border: 0;
+  background: transparent;
+  color: #8fa3b8;
+  height: 40px;
+  padding: 0 10px 0 12px;
+}
+
+@media (min-width: 1200px) {
+  .zt-buscador {
+    width: 170px;
+  }
+}
+@media (min-width: 1400px) {
+  .zt-header .navbar-nav .nav-link {
+    padding-inline: 0.6rem;
+  }
+  .zt-buscador {
+    width: 220px;
+  }
+}
+
+.zt-cuenta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  color: var(--zt-texto-suave);
+  font-weight: 500;
+  padding: 0;
+  min-height: 44px;
+}
+.zt-cuenta:hover {
+  color: #fff;
+}
+
+.zt-carrito {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 22px;
+  background: var(--zt-acento);
+  color: #1a0e00;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.zt-carrito:hover {
+  color: #1a0e00;
+  filter: brightness(1.08);
+}
+
+/* Footer */
+.zt-footer {
+  background: var(--zt-azul);
+  color: var(--zt-texto-suave);
+  border-top: 3px solid var(--zt-acento);
+}
+.zt-footer a:not(.zt-logo) {
+  color: var(--zt-texto-suave);
+  text-decoration: none;
+}
+.zt-footer a:not(.zt-logo):hover {
+  color: #fff;
+}
+
+.zt-footer-titulo {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #fff;
+  margin-bottom: 1rem;
+}
+
+.zt-footer-base {
+  border-top: 1px solid var(--zt-azul-claro);
+  color: #8fa3b8;
+}
+
+/* Campos de formulario más visibles (borde y fondo) */
+.form-control,
+.form-select {
+  background-color: #f4f6f9;
+  border: 1.5px solid #8a96a3;
+}
+.form-control:hover,
+.form-select:hover {
+  border-color: #5f6b78;
+}
+.form-control:focus,
+.form-select:focus {
+  background-color: #fff;
+  border-color: var(--zt-acento);
+  box-shadow: 0 0 0 0.25rem rgba(249, 115, 22, 0.25);
+}
+.form-control::placeholder {
+  color: #7b8794;
+}
+.form-check-input {
+  border: 1.5px solid #5f6b78;
+}
+/* Mantiene el rojo de Bootstrap cuando el campo tiene error */
+.form-control.is-invalid,
+.form-select.is-invalid {
+  border-color: #dc3545;
+}
