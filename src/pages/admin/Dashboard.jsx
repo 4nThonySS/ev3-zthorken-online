@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { getAll } from '../../data/db.js'
+import { useApi, Estado } from '../../api.jsx'
 import { formatearPrecio } from '../../utils/formato.js'
 
 const accesos = [
@@ -11,9 +11,13 @@ const accesos = [
 ]
 
 function Dashboard() {
-  const ordenes = getAll('ordenes')
-  const productos = getAll('productos')
-  const usuarios = getAll('usuarios')
+  const boletas = useApi('/boletas')
+  const productos = useApi('/productos').datos
+  const usuarios = useApi('/usuarios').datos
+  if (!boletas.datos || !productos || !usuarios) return <Estado error={boletas.error} />
+
+  // Las boletas anuladas no cuentan como venta
+  const ordenes = boletas.datos.filter((o) => o.estado === 'PAGADA')
 
   const tarjetas = [
     {
@@ -31,7 +35,7 @@ function Dashboard() {
     {
       titulo: 'Usuarios',
       valor: usuarios.length,
-      detalle: `Clientes: ${usuarios.filter((u) => u.rol === 'cliente').length}`,
+      detalle: `Clientes: ${usuarios.filter((u) => u.rol === 'CLIENTE').length}`,
       to: '/admin/usuarios',
     },
   ]

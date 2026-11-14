@@ -1,12 +1,14 @@
 import { Link, useParams } from 'react-router-dom'
-import { getById } from '../../data/db.js'
+import { useApi, Estado } from '../../api.jsx'
+import { useEsAdmin } from '../../context/sesion.js'
 import { formatearFecha, formatearPrecio } from '../../utils/formato.js'
 
 function Boleta() {
   const { id } = useParams()
-  const orden = getById('ordenes', id)
+  const esAdmin = useEsAdmin()
+  const { datos: orden, error } = useApi(`/boletas/${id}`)
 
-  if (!orden) {
+  if (error?.status === 404 || error?.status === 400) {
     return (
       <>
         <p>La orden no existe.</p>
@@ -14,6 +16,8 @@ function Boleta() {
       </>
     )
   }
+
+  if (!orden) return <Estado error={error} />
 
   const { cliente, direccion } = orden
 
@@ -37,7 +41,7 @@ function Boleta() {
           <h2 className="h6 text-secondary">Cliente</h2>
           <p className="mb-0">{cliente.nombre} {cliente.apellidos}</p>
           <p className="mb-0">{cliente.correo}</p>
-          {orden.usuarioId && (
+          {esAdmin && orden.usuarioId && (
             <Link className="small d-print-none" to={`/admin/usuarios/${orden.usuarioId}`}>Ver usuario</Link>
           )}
         </div>

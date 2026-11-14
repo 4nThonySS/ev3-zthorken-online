@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { CartProvider } from '../context/CartContext.jsx'
+import { backend, instalarBackend, hasta } from '../test/backendFalso.js'
 import Carrito from './Carrito.jsx'
 
 const ITEM = { productoId: 1, nombre: 'PC Gamer Ryzen 5 RTX 4060', precio: 899990, imagen: '/img/productos/audifonos-hyperx.jpg', cantidad: 1 }
@@ -18,6 +19,14 @@ describe('Carrito', () => {
   beforeEach(() => {
     localStorage.clear()
     localStorage.setItem('zthorken_carrito', JSON.stringify([ITEM]))
+    instalarBackend()
+  })
+
+  it('no deja sumar más que el stock del backend', async () => {
+    backend.productos[0].stock = 1
+    montar()
+    const boton = screen.getByLabelText('Aumentar PC Gamer Ryzen 5 RTX 4060')
+    await hasta(() => boton.disabled)
   })
 
   it('sumar cambia la cantidad en el estado', () => {

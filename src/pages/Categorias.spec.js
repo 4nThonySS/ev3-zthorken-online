@@ -1,17 +1,18 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { getAll } from '../data/db.js'
+import { backend, instalarBackend } from '../test/backendFalso.js'
 import Categorias from './Categorias.jsx'
 
 describe('Categorias', () => {
-  it('renderiza todas las categorías', () => {
+  beforeEach(() => instalarBackend())
+
+  it('renderiza todas las categorías', async () => {
     render(
       <MemoryRouter>
         <Categorias />
       </MemoryRouter>
     )
-    getAll('categorias').forEach((c) => {
-      expect(screen.getByText(c.nombre)).toBeTruthy()
-    })
+    await screen.findByText('Audio')
+    backend.categorias.forEach((c) => expect(screen.getByText(c.nombre)).toBeTruthy())
   })
 })

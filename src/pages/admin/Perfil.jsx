@@ -31,7 +31,7 @@ function Perfil() {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  function enviar(e) {
+  async function enviar(e) {
     e.preventDefault()
     const nuevosErrores = validar(form)
     setErrores(nuevosErrores)
@@ -42,7 +42,7 @@ function Perfil() {
     const cambios = { nombre: form.nombre.trim(), apellidos: form.apellidos.trim(), correo: form.correo }
     if (form.password) cambios.password = form.password
 
-    const respuesta = actualizarPerfil(cambios)
+    const respuesta = await actualizarPerfil(cambios)
     if (respuesta.ok) {
       setMensaje({ tipo: 'success', texto: 'Perfil actualizado' })
       setForm({ ...form, password: '', confirmar: '' })

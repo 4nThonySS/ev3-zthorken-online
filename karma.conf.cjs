@@ -2,13 +2,13 @@
 const fs = require('fs')
 const { createInstrumenter } = require('istanbul-lib-instrument')
 
-// Marca el código de src/ (menos los tests) para medir qué líneas se ejecutan
+// Marca el código de src/ (menos los tests y src/test/) para medir qué líneas se ejecutan
 const instrumentador = createInstrumenter({ esModules: true, parserPlugins: ['jsx'] })
 const cobertura = {
   name: 'cobertura',
   setup(build) {
     build.onLoad({ filter: /[\\/]src[\\/].*\.jsx?$/ }, (args) => {
-      if (args.path.endsWith('.spec.js')) return
+      if (args.path.endsWith('.spec.js') || /[\\/]src[\\/]test[\\/]/.test(args.path)) return
       const codigo = fs.readFileSync(args.path, 'utf8')
       return { contents: instrumentador.instrumentSync(codigo, args.path), loader: 'jsx' }
     })

@@ -1,85 +1,54 @@
-import { useState, useReducer } from 'react'
+import { useState } from 'react'
 import { SesionContext } from './sesion.js'
-import { getAll, getById, create, update } from '../data/db.js'
+import { api, leerSesion, CLAVE_SESION } from '../api.jsx'
 
-// Solo se guarda el id del usuario; sus datos se leen siempre desde db.js
-const STORAGE_KEY = 'zthorken-sesion'
-
-function leerSesion() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY))
-  } catch {
-    return null
-  }
-}
-
-function sinPassword(usuario) {
-  if (!usuario) return null
-  const { password: _password, ...datos } = usuario
-  return datos
-}
-
-function buscarPorCorreo(correo) {
-  const normalizado = correo.trim().toLowerCase()
-  return getAll('usuarios').find((u) => u.correo.toLowerCase() === normalizado)
-}
-
+// La sesión ({ token, usuario }) viene del backend y se guarda en localStorage para no perderla al recargar
 export function SesionProvider({ children }) {
-  const [usuarioId, setUsuarioId] = useState(leerSesion)
-  // Fuerza un render cuando cambian los datos del usuario en db.js
-  const [, refrescar] = useReducer((n) => n + 1, 0)
-  const usuario = sinPassword(usuarioId ? getById('usuarios', usuarioId) : null)
+  // ponytail: si el token vence (24 h) la sesión sigue en pantalla y el backend responde 401; basta con volver a entrar
+  const [sesion, setSesion] = useState(leerSesion)
+  const usuario = sesion?.usuario ?? null
 
-  function iniciar(id) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(id))
-    setUsuarioId(id)
+  function guardar(nueva) {
+    if (nueva) localStorage.setItem(CLAVE_SESION, JSON.stringify(nueva))
+    else localStorage.removeItem(CLAVE_SESION)
+    setSesion(nueva)
   }
 
-  // Devuelve { ok: true } o { ok: false, error: 'mensaje' }
-  function login(correo, password) {
-    const encontrado = buscarPorCorreo(correo)
-    if (!encontrado || encontrado.password !== password) {
-      return { ok: false, error: 'Correo o contraseña incorrectos' }
+  // Todas devuelven { ok: true } o { ok: false, error: 'mensaje' }
+  async function intentar(accion) {
+    try {
+      await accion()
+      return { ok: true }
+    } catch (e) {
+      return { ok: false, error: e.message }
     }
-    iniciar(encontrado.id)
-    return { ok: true }
   }
 
-  // Crea un usuario con rol cliente e inicia su sesión
-  function registrar(datos) {
-    if (buscarPorCorreo(datos.correo)) {
-      return { ok: false, error: 'Ya existe una cuenta con ese correo' }
-    }
-    const nuevo = create('usuarios', {
-      calle: '',
-      departamento: '',
-      region: '',
-      comuna: '',
-      ...datos,
-      correo: datos.correo.trim().toLowerCase(),
-      rol: 'cliente',
+  const login = (correo, password) =>
+    intentar(async () => guardar(await api('/auth/login', { method: 'POST', body: { correo, password } })))
+
+  // El backend crea siempre un CLIENTE y devuelve su token
+  const registrar = (datos) =>
+    intentar(async () => guardar(await api('/auth/register', { method: 'POST', body: datos })))
+
+  // Se manda el perfil completo: lo que no viene en cambios se mantiene
+  const actualizarPerfil = (cambios) =>
+    intentar(async () => {
+      const actualizado = await api('/auth/perfil', { method: 'PUT', body: { ...usuario, ...cambios } })
+      guardar({ ...sesion, usuario: actualizado })
     })
-    iniciar(nuevo.id)
-    return { ok: true }
-  }
 
-  // Edita los datos del usuario con sesión iniciada
-  function actualizarPerfil(cambios) {
-    const otro = cambios.correo && buscarPorCorreo(cambios.correo)
-    if (otro && otro.id !== usuarioId) {
-      return { ok: false, error: 'Ya existe una cuenta con ese correo' }
-    }
-    update('usuarios', usuarioId, cambios.correo ? { ...cambios, correo: cambios.correo.trim().toLowerCase() } : cambios)
-    refrescar()
-    return { ok: true }
-  }
+  const logout = () => guardar(null)
 
-  function logout() {
-    localStorage.removeItem(STORAGE_KEY)
-    setUsuarioId(null)
+  const valor = {
+    usuario,
+    esAdmin: usuario?.rol === 'ADMIN',
+    esVendedor: usuario?.rol === 'VENDEDOR',
+    login,
+    registrar,
+    actualizarPerfil,
+    logout,
   }
-
-  const valor = { usuario, esAdmin: usuario?.rol === 'admin', login, registrar, actualizarPerfil, logout }
 
   return <SesionContext.Provider value={valor}>{children}</SesionContext.Provider>
 }

@@ -1,4 +1,4 @@
-import { getById, create, update } from '../data/db.js'
+import { api } from '../api.jsx'
 
 export function validarCheckout(d) {
   const errores = {}
@@ -11,32 +11,18 @@ export function validarCheckout(d) {
   return errores
 }
 
+// Crea la boleta en el backend, que usa el precio vigente, calcula el total, revisa y descuenta el stock.
+// Si hay sesión, la boleta queda a nombre del usuario del token.
 // Devuelve { ok: true, orden } o { ok: false, error }
-export function procesarPago({ items, total, cliente, direccion, usuarioId }) {
+export async function procesarPago({ items, cliente, direccion }) {
   if (items.length === 0) return { ok: false, error: 'Tu carrito está vacío' }
-
-  for (const i of items) {
-    const producto = getById('productos', i.productoId)
-    if (!producto) return { ok: false, error: `El producto "${i.nombre}" ya no existe` }
-    if (i.cantidad > producto.stock) {
-      return { ok: false, error: `Stock insuficiente de "${i.nombre}" (disponible: ${producto.stock})` }
-    }
+  try {
+    const orden = await api('/boletas', {
+      method: 'POST',
+      body: { cliente, direccion, items: items.map(({ productoId, cantidad }) => ({ productoId, cantidad })) },
+    })
+    return { ok: true, orden }
+  } catch (e) {
+    return { ok: false, error: e.message }
   }
-
-  const orden = create('ordenes', {
-    usuarioId: usuarioId ?? null,
-    fecha: new Date().toISOString().slice(0, 10),
-    estado: 'pagada',
-    items: items.map(({ productoId, nombre, precio, cantidad }) => ({ productoId, nombre, precio, cantidad })),
-    total,
-    cliente,
-    direccion,
-  })
-
-  items.forEach((i) => {
-    const producto = getById('productos', i.productoId)
-    update('productos', producto.id, { stock: producto.stock - i.cantidad })
-  })
-
-  return { ok: true, orden }
 }

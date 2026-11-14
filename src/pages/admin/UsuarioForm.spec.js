@@ -2,12 +2,12 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import UsuarioForm from './UsuarioForm.jsx'
 import { SesionProvider } from '../../context/SesionProvider.jsx'
-import { getAll, getById, resetDB } from '../../data/db.js'
+import { backend, iniciarSesion, instalarBackend } from '../../test/backendFalso.js'
 
-// Se renderiza con la sesión del admin (id 1)
-function renderForm(ruta = '/admin/usuarios/nuevo') {
-  localStorage.setItem('zthorken-sesion', '1')
-  return render(
+// Se renderiza con la sesión del admin (id 1) y espera a que cargue el formulario
+async function renderForm(ruta = '/admin/usuarios/nuevo') {
+  iniciarSesion('admin@zthorken.cl')
+  render(
     <MemoryRouter initialEntries={[ruta]}>
       <SesionProvider>
         <Routes>
@@ -18,6 +18,7 @@ function renderForm(ruta = '/admin/usuarios/nuevo') {
       </SesionProvider>
     </MemoryRouter>,
   )
+  if (!ruta.includes('999')) await screen.findByRole('button', { name: 'Guardar' })
 }
 
 function escribir(label, valor) {
@@ -36,78 +37,79 @@ function llenarValido() {
 }
 
 describe('UsuarioForm', () => {
-  beforeEach(() => resetDB())
-  afterEach(() => localStorage.removeItem('zthorken-sesion'))
+  beforeEach(() => instalarBackend())
 
-  it('actualiza el estado del formulario al escribir', () => {
-    renderForm()
+  it('actualiza el estado del formulario al escribir y ofrece los tres roles', async () => {
+    await renderForm()
     escribir('Nombre', 'Ana')
-    escribir('Rol', 'admin')
+    escribir('Rol', 'VENDEDOR')
     expect(screen.getByLabelText('Nombre').value).toBe('Ana')
-    expect(screen.getByLabelText('Rol').value).toBe('admin')
+    expect(screen.getByLabelText('Rol').value).toBe('VENDEDOR')
+    expect([...screen.getByLabelText('Rol').options].map((o) => o.value)).toEqual(['CLIENTE', 'VENDEDOR', 'ADMIN'])
   })
 
-  it('muestra errores si se envía vacío y no guarda', () => {
-    renderForm()
+  it('muestra errores si se envía vacío y no llama al backend', async () => {
+    await renderForm()
     guardar()
     expect(screen.getByText('Ingresa el nombre')).toBeTruthy()
     expect(screen.getByText('Ingresa los apellidos')).toBeTruthy()
     expect(screen.getByText('Ingresa el correo')).toBeTruthy()
     expect(screen.getByText('La contraseña debe tener al menos 6 caracteres')).toBeTruthy()
-    expect(getAll('usuarios').length).toBe(2)
+    expect(backend.usuarios.length).toBe(3)
   })
 
-  it('valida el formato del correo', () => {
-    renderForm()
+  it('valida el formato del correo', async () => {
+    await renderForm()
     llenarValido()
     escribir('Correo', 'correo-malo')
     guardar()
     expect(screen.getByText('El correo no es válido')).toBeTruthy()
   })
 
-  it('no permite un correo repetido', () => {
-    renderForm()
+  it('muestra el error del backend si el correo está repetido', async () => {
+    await renderForm()
     llenarValido()
     escribir('Correo', 'PEDRO@correo.cl')
     guardar()
-    expect(screen.getByText('Ya existe una cuenta con ese correo')).toBeTruthy()
+    expect((await screen.findByRole('alert')).textContent).toBe('Ya existe un usuario con el correo pedro@correo.cl')
   })
 
-  it('crea un usuario y vuelve al listado', () => {
-    renderForm()
+  it('crea un usuario en el backend y vuelve al listado', async () => {
+    await renderForm()
     llenarValido()
     escribir('Comuna (opcional)', 'Maipú')
     guardar()
-    expect(screen.getByText('Listado de usuarios')).toBeTruthy()
-    const nuevo = getById('usuarios', 3)
+    expect(await screen.findByText('Listado de usuarios')).toBeTruthy()
+    const nuevo = backend.usuarios.find((u) => u.id === 4)
     expect(nuevo.correo).toBe('ana@correo.cl')
     expect(nuevo.password).toBe('ana123')
-    expect(nuevo.rol).toBe('cliente')
+    expect(nuevo.rol).toBe('CLIENTE')
     expect(nuevo.comuna).toBe('Maipú')
   })
 
-  it('al editar carga los datos sin la contraseña', () => {
-    renderForm('/admin/usuarios/2/editar')
+  it('al editar carga los datos sin la contraseña', async () => {
+    await renderForm('/admin/usuarios/3/editar')
     expect(screen.getByRole('heading', { name: 'Editar usuario' })).toBeTruthy()
     expect(screen.getByLabelText('Correo').value).toBe('pedro@correo.cl')
     expect(screen.getByLabelText('Contraseña').value).toBe('')
   })
 
-  it('al editar con la contraseña vacía mantiene la anterior', () => {
-    renderForm('/admin/usuarios/2/editar')
+  it('al editar con la contraseña vacía no la envía y se mantiene', async () => {
+    await renderForm('/admin/usuarios/3/editar')
     escribir('Nombre', 'Pedrito')
     guardar()
-    expect(getById('usuarios', 2).nombre).toBe('Pedrito')
-    expect(getById('usuarios', 2).password).toBe('pedro123')
+    await screen.findByText('Listado de usuarios')
+    expect(backend.usuarios.find((u) => u.id === 3).nombre).toBe('Pedrito')
+    expect(backend.usuarios.find((u) => u.id === 3).password).toBe('pedro123')
   })
 
-  it('al editar a sí mismo no puede cambiar su rol', () => {
-    renderForm('/admin/usuarios/1/editar')
+  it('al editar a sí mismo no puede cambiar su rol', async () => {
+    await renderForm('/admin/usuarios/1/editar')
     expect(screen.getByLabelText('Rol').disabled).toBeTrue()
   })
 
-  it('avisa si el usuario no existe', () => {
-    renderForm('/admin/usuarios/999/editar')
-    expect(screen.getByText('El usuario no existe.')).toBeTruthy()
+  it('avisa si el usuario no existe', async () => {
+    await renderForm('/admin/usuarios/999/editar')
+    expect(await screen.findByText('El usuario no existe.')).toBeTruthy()
   })
 })

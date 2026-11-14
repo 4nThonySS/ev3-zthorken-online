@@ -25,7 +25,8 @@ export default function Checkout() {
   }))
   const [errores, setErrores] = useState({})
   const [avisoAbierto, setAvisoAbierto] = useState(false)
-  const esAdmin = usuario?.rol === 'admin'
+  const esAdmin = usuario?.rol === 'ADMIN'
+  const [enviando, setEnviando] = useState(false)
 
   // Un usuario con sesión puede guardar estos datos en su cuenta.
   // Se ofrece solo si lo que escribió es distinto de lo que ya tiene guardado.
@@ -39,7 +40,7 @@ export default function Checkout() {
   const cambiar = (e) => setDatos({ ...datos, [e.target.name]: e.target.value })
   const cambiarRegion = (e) => setDatos({ ...datos, region: e.target.value, comuna: '' })
 
-  const pagar = (e) => {
+  const pagar = async (e) => {
     e.preventDefault()
     if (esAdmin) {
       setAvisoAbierto(true)
@@ -50,23 +51,24 @@ export default function Checkout() {
     if (Object.keys(nuevos).length > 0) return
 
     const { nombre, apellidos, correo, calle, departamento, region, comuna, indicaciones } = datos
-    const resultado = procesarPago({
+    setEnviando(true)
+    const resultado = await procesarPago({
       items,
-      total,
-      usuarioId: usuario?.id,
       cliente: { nombre, apellidos, correo },
       direccion: { calle, departamento, region, comuna, indicaciones },
     })
+    setEnviando(false)
 
     if (!resultado.ok) {
       navigate('/pago-error', { state: { mensaje: resultado.error } })
       return
     }
     if (hayCambios && quiereGuardar && actualizarPerfil) {
-      actualizarPerfil({ nombre, apellidos, calle, departamento, region, comuna })
+      await actualizarPerfil({ nombre, apellidos, calle, departamento, region, comuna })
     }
     limpiar()
-    navigate(`/pago-exitoso/${resultado.orden.id}`)
+    // La boleta va en el state: un invitado no puede volver a pedirla al backend
+    navigate(`/pago-exitoso/${resultado.orden.id}`, { state: { orden: resultado.orden } })
   }
 
   if (items.length === 0) {
@@ -183,8 +185,8 @@ export default function Checkout() {
               </p>
             )}
 
-            <button type="submit" className="btn btn-success btn-lg">
-              Pagar {formatoCLP(total)}
+            <button type="submit" className="btn btn-success btn-lg" disabled={enviando}>
+              {enviando ? 'Procesando...' : `Pagar ${formatoCLP(total)}`}
             </button>
           </form>
         </div>

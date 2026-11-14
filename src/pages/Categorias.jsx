@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
-import { getAll } from '../data/db.js'
+import { useApi, Estado } from '../api.jsx'
 
 export default function Categorias() {
-  const categorias = getAll('categorias')
+  const { datos: categorias, error } = useApi('/categorias')
+  if (!categorias) return <Estado error={error} />
 
   return (
     <div className="container my-4">

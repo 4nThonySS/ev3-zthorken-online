@@ -1,23 +1,24 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getAll, remove } from '../../data/db.js'
+import { api, useApi, Estado } from '../../api.jsx'
 import BotonEliminar from '../../components/BotonEliminar.jsx'
 
 function Categorias() {
-  const [categorias, setCategorias] = useState(() => getAll('categorias'))
   const [error, setError] = useState('')
-  const productos = getAll('productos')
+  const { datos: categorias, error: errorCarga, recargar } = useApi('/categorias')
+  const { datos: productos } = useApi('/productos')
+  if (!categorias || !productos) return <Estado error={errorCarga} />
   const cantidad = (categoriaId) => productos.filter((p) => p.categoriaId === categoriaId).length
 
-  // No se elimina una categoría con productos, para no dejarlos sin categoría
-  function eliminar(c) {
-    if (cantidad(c.id) > 0) {
-      setError(`No se puede eliminar "${c.nombre}" porque tiene productos.`)
-      return
+  // El backend no deja eliminar una categoría con productos y responde con el motivo
+  async function eliminar(c) {
+    try {
+      await api(`/categorias/${c.id}`, { method: 'DELETE' })
+      setError('')
+      recargar()
+    } catch (e) {
+      setError(e.message)
     }
-    remove('categorias', c.id)
-    setCategorias(getAll('categorias'))
-    setError('')
   }
 
   return (

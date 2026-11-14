@@ -1,10 +1,11 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import ProductoForm from './ProductoForm.jsx'
-import { getAll, getById, resetDB } from '../../data/db.js'
+import { backend, instalarBackend } from '../../test/backendFalso.js'
 
-function renderForm(ruta = '/admin/productos/nuevo') {
-  return render(
+// Monta el formulario y espera a que carguen las categorías (y el producto si se edita)
+async function renderForm(ruta = '/admin/productos/nuevo') {
+  render(
     <MemoryRouter initialEntries={[ruta]}>
       <Routes>
         <Route path="/admin/productos/nuevo" element={<ProductoForm />} />
@@ -13,6 +14,7 @@ function renderForm(ruta = '/admin/productos/nuevo') {
       </Routes>
     </MemoryRouter>,
   )
+  if (!ruta.includes('999')) await screen.findByRole('button', { name: 'Guardar' })
 }
 
 function escribir(label, valor) {
@@ -32,49 +34,49 @@ function llenarValido() {
 }
 
 describe('ProductoForm', () => {
-  beforeEach(() => resetDB())
+  beforeEach(() => instalarBackend())
 
-  it('actualiza el estado del formulario al escribir', () => {
-    renderForm()
+  it('actualiza el estado del formulario al escribir', async () => {
+    await renderForm()
     escribir('Nombre', 'Mouse Pad XL')
     escribir('Categoría', '4')
     expect(screen.getByLabelText('Nombre').value).toBe('Mouse Pad XL')
     expect(screen.getByLabelText('Categoría').value).toBe('4')
   })
 
-  it('muestra errores si se envía vacío y no guarda', () => {
-    renderForm()
+  it('muestra errores si se envía vacío y no llama al backend', async () => {
+    await renderForm()
     guardar()
     expect(screen.getByText('Ingresa el nombre')).toBeTruthy()
     expect(screen.getByText('El precio debe ser un número entero mayor a 0')).toBeTruthy()
     expect(screen.getByText('El stock debe ser un número entero de 0 o más')).toBeTruthy()
     expect(screen.getByText('Selecciona una categoría')).toBeTruthy()
-    expect(getAll('productos').length).toBe(12)
+    expect(backend.peticiones).not.toContain('POST /productos')
   })
 
-  it('no acepta un precio de 0', () => {
-    renderForm()
+  it('no acepta un precio de 0', async () => {
+    await renderForm()
     llenarValido()
     escribir('Precio', '0')
     guardar()
     expect(screen.getByText('El precio debe ser un número entero mayor a 0')).toBeTruthy()
   })
 
-  it('no acepta una oferta mayor o igual al precio', () => {
-    renderForm()
+  it('no acepta una oferta mayor o igual al precio', async () => {
+    await renderForm()
     llenarValido()
     escribir('Precio oferta (opcional)', '19990')
     guardar()
     expect(screen.getByText('La oferta debe ser mayor a 0 y menor al precio')).toBeTruthy()
   })
 
-  it('crea un producto y vuelve al listado', () => {
-    renderForm()
+  it('crea un producto en el backend y vuelve al listado', async () => {
+    await renderForm()
     llenarValido()
     escribir('Precio oferta (opcional)', '14990')
     guardar()
-    expect(screen.getByText('Listado de productos')).toBeTruthy()
-    const nuevo = getById('productos', 13)
+    expect(await screen.findByText('Listado de productos')).toBeTruthy()
+    const nuevo = backend.productos.find((p) => p.id === 13)
     expect(nuevo.nombre).toBe('Mouse Pad XL')
     expect(nuevo.precio).toBe(19990)
     expect(nuevo.precioOferta).toBe(14990)
@@ -82,36 +84,50 @@ describe('ProductoForm', () => {
     expect(nuevo.imagen).toContain('placehold.co')
   })
 
-  it('sin oferta guarda precioOferta en null', () => {
-    renderForm()
+  it('sin oferta guarda precioOferta en null', async () => {
+    await renderForm()
     llenarValido()
     guardar()
-    expect(getById('productos', 13).precioOferta).toBeNull()
+    await screen.findByText('Listado de productos')
+    expect(backend.productos.find((p) => p.id === 13).precioOferta).toBeNull()
   })
 
-  it('al editar carga los datos del producto', () => {
-    renderForm('/admin/productos/5/editar')
+  it('al editar carga los datos del producto desde el backend', async () => {
+    await renderForm('/admin/productos/5/editar')
     expect(screen.getByRole('heading', { name: 'Editar producto' })).toBeTruthy()
     expect(screen.getByLabelText('Nombre').value).toBe('Audífonos HyperX Cloud II')
     expect(screen.getByLabelText('Precio').value).toBe('79990')
     expect(screen.getByLabelText('Categoría').value).toBe('3')
   })
 
-  it('edita un producto sin crear uno nuevo', () => {
-    renderForm('/admin/productos/5/editar')
+  it('edita un producto sin crear uno nuevo', async () => {
+    await renderForm('/admin/productos/5/editar')
     escribir('Stock', '50')
     guardar()
-    expect(getById('productos', 5).stock).toBe(50)
-    expect(getAll('productos').length).toBe(12)
+    await screen.findByText('Listado de productos')
+    expect(backend.productos.find((p) => p.id === 5).stock).toBe(50)
+    expect(backend.productos.length).toBe(12)
   })
 
-  it('avisa si el producto no existe', () => {
-    renderForm('/admin/productos/999/editar')
-    expect(screen.getByText('El producto no existe.')).toBeTruthy()
+  it('muestra el error del backend si rechaza los datos', async () => {
+    window.fetch.and.callFake((url, opciones) =>
+      opciones?.method === 'POST'
+        ? Promise.resolve(new Response(JSON.stringify({ mensaje: 'Datos inválidos', campos: { nombre: 'El nombre no puede superar 150 caracteres' } }), { status: 400 }))
+        : Promise.resolve(new Response(JSON.stringify(backend.categorias), { status: 200 })))
+    await renderForm()
+    llenarValido()
+    guardar()
+    expect((await screen.findByRole('alert')).textContent).toBe('Datos inválidos')
+    expect(screen.getByText('El nombre no puede superar 150 caracteres')).toBeTruthy()
   })
 
-  it('muestra la vista previa de la imagen', () => {
-    renderForm()
+  it('avisa si el producto no existe', async () => {
+    await renderForm('/admin/productos/999/editar')
+    expect(await screen.findByText('El producto no existe.')).toBeTruthy()
+  })
+
+  it('muestra la vista previa de la imagen', async () => {
+    await renderForm()
     expect(screen.queryByAltText('Vista previa')).toBeNull()
     escribir('URL de la imagen (opcional)', 'https://ejemplo.cl/foto.jpg')
     expect(screen.getByAltText('Vista previa').getAttribute('src')).toBe('https://ejemplo.cl/foto.jpg')

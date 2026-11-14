@@ -64,7 +64,7 @@ describe('Contacto', () => {
   })
 
   it('llena nombre y correo si hay sesión iniciada', () => {
-    localStorage.setItem('zthorken-sesion', '2')
+    localStorage.setItem('zthorken-sesion', JSON.stringify({ token: 'x', usuario: { id: 3, nombre: 'Pedro', apellidos: 'Pérez', correo: 'pedro@correo.cl', rol: 'CLIENTE' } }))
     renderContacto()
     expect(screen.getByLabelText('Nombre').value).toBe('Pedro Pérez')
     expect(screen.getByLabelText('Correo').value).toBe('pedro@correo.cl')

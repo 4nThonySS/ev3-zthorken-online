@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import Carrusel from '../components/Carrusel.jsx'
-import { getAll } from '../data/db.js'
+import { useApi } from '../api.jsx'
 
 const slides = [
   { titulo: 'Nuevos lanzamientos', texto: 'Descubre lo último en computadores y notebooks.', imagen: '/img/carrusel/lanzamientos.jpg', enlace: '/productos', boton: 'Ver productos' },
@@ -9,7 +9,7 @@ const slides = [
 ]
 
 function Home() {
-  const categorias = getAll('categorias')
+  const categorias = useApi('/categorias').datos ?? []
 
   return (
     <main>

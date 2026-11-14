@@ -24,14 +24,14 @@ function Login() {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  function enviar(e) {
+  async function enviar(e) {
     e.preventDefault()
     const nuevosErrores = validar(form)
     setErrores(nuevosErrores)
     setErrorLogin('')
     if (Object.keys(nuevosErrores).length > 0) return
 
-    const respuesta = login(form.correo, form.password)
+    const respuesta = await login(form.correo.trim(), form.password)
     if (respuesta.ok) navigate('/')
     else setErrorLogin(respuesta.error)
   }

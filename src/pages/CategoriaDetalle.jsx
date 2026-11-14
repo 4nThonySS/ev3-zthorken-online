@@ -1,12 +1,13 @@
 import { Link, useParams } from 'react-router-dom'
-import { getAll, getById } from '../data/db.js'
+import { useApi, Estado } from '../api.jsx'
 import ProductCard from '../components/ProductCard.jsx'
 
 export default function CategoriaDetalle() {
   const { id } = useParams()
-  const categoria = getById('categorias', id)
+  const { datos: categoria, error } = useApi(`/categorias/${id}`)
+  const { datos: productos } = useApi(`/productos?categoriaId=${id}`)
 
-  if (!categoria) {
+  if (error?.status === 404 || error?.status === 400) {
     return (
       <div className="container my-5 text-center">
         <h1>Categoría no encontrada</h1>
@@ -15,7 +16,7 @@ export default function CategoriaDetalle() {
     )
   }
 
-  const productos = getAll('productos').filter((p) => p.categoriaId === categoria.id)
+  if (!categoria || !productos) return <Estado error={error} />
 
   return (
     <div className="container my-4">

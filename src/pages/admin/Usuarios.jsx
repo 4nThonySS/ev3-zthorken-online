@@ -1,16 +1,23 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getAll, remove } from '../../data/db.js'
+import { api, useApi, Estado } from '../../api.jsx'
 import { useSesion } from '../../context/sesion.js'
 import BotonEliminar from '../../components/BotonEliminar.jsx'
 
 function Usuarios() {
-  const [usuarios, setUsuarios] = useState(() => getAll('usuarios'))
+  const [error, setError] = useState('')
+  const { datos: usuarios, error: errorCarga, recargar } = useApi('/usuarios')
   const { usuario: actual } = useSesion()
+  if (!usuarios) return <Estado error={errorCarga} />
 
-  function eliminar(id) {
-    remove('usuarios', id)
-    setUsuarios(getAll('usuarios'))
+  async function eliminar(id) {
+    try {
+      await api(`/usuarios/${id}`, { method: 'DELETE' })
+      setError('')
+      recargar()
+    } catch (e) {
+      setError(e.message)
+    }
   }
 
   return (
@@ -19,6 +26,8 @@ function Usuarios() {
         <h1 className="h3 mb-0">Usuarios</h1>
         <Link className="btn btn-primary" to="/admin/usuarios/nuevo">Nuevo usuario</Link>
       </div>
+
+      {error && <div className="alert alert-danger" role="alert">{error}</div>}
 
       <div className="table-responsive">
         <table className="table table-hover align-middle">
@@ -40,7 +49,7 @@ function Usuarios() {
                   <td>{nombre}</td>
                   <td>{u.correo}</td>
                   <td>
-                    <span className={`badge ${u.rol === 'admin' ? 'text-bg-dark' : 'text-bg-secondary'}`}>{u.rol}</span>
+                    <span className={`badge ${u.rol === 'ADMIN' ? 'text-bg-dark' : u.rol === 'VENDEDOR' ? 'text-bg-info' : 'text-bg-secondary'}`}>{u.rol}</span>
                   </td>
                   <td className="text-nowrap">
                     <Link className="btn btn-sm btn-outline-secondary me-1" to={`/admin/usuarios/${u.id}`} aria-label={`Ver ${nombre}`}>

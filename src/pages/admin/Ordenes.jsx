@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom'
-import { getAll } from '../../data/db.js'
+import { useApi, Estado } from '../../api.jsx'
 import { formatearFecha, formatearPrecio } from '../../utils/formato.js'
 
 function Ordenes() {
-  // Más recientes primero
-  const ordenes = [...getAll('ordenes')].sort((a, b) => b.fecha.localeCompare(a.fecha) || b.id - a.id)
+  // El backend las entrega de la más reciente a la más antigua
+  const { datos: ordenes, error } = useApi('/boletas')
+  if (!ordenes) return <Estado error={error} />
 
   return (
     <>

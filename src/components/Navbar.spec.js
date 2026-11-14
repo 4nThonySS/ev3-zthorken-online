@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom'
 import Navbar from './Navbar.jsx'
 import { SesionProvider } from '../context/SesionProvider.jsx'
-import { getAll, resetDB } from '../data/db.js'
+import { backend, iniciarSesion, instalarBackend } from '../test/backendFalso.js'
 
 function UbicacionActual() {
   const { pathname, search } = useLocation()
@@ -23,10 +23,7 @@ function renderNavbar(props) {
 }
 
 describe('Navbar', () => {
-  beforeEach(() => {
-    resetDB()
-    localStorage.removeItem('zthorken-sesion')
-  })
+  beforeEach(() => instalarBackend())
 
   it('muestra los enlaces del menú', () => {
     renderNavbar()
@@ -35,9 +32,10 @@ describe('Navbar', () => {
     }
   })
 
-  it('muestra todas las categorías en el menú', () => {
+  it('muestra las categorías del backend en el menú', async () => {
     renderNavbar()
-    for (const c of getAll('categorias')) {
+    await screen.findByRole('link', { name: 'Audio' })
+    for (const c of backend.categorias) {
       expect(screen.getByRole('link', { name: c.nombre })).toBeTruthy()
     }
   })
@@ -68,23 +66,29 @@ describe('Navbar', () => {
     expect(screen.queryByRole('button', { name: 'Cerrar sesión' })).toBeNull()
   })
 
-  it('con sesión de admin muestra el nombre, Admin y Cerrar sesión', () => {
-    localStorage.setItem('zthorken-sesion', '1')
+  it('con sesión de admin muestra el nombre, Panel y Cerrar sesión', () => {
+    iniciarSesion('admin@zthorken.cl')
     renderNavbar()
     expect(screen.getByText('Hola, Admin')).toBeTruthy()
-    expect(screen.getByRole('link', { name: 'Admin' })).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Panel' })).toBeTruthy()
     expect(screen.queryByRole('link', { name: 'Iniciar sesión' })).toBeNull()
   })
 
-  it('un cliente no ve el botón Admin', () => {
-    localStorage.setItem('zthorken-sesion', '2')
+  it('el vendedor también ve el enlace al panel', () => {
+    iniciarSesion('vendedor@zthorken.cl')
+    renderNavbar()
+    expect(screen.getByRole('link', { name: 'Panel' })).toBeTruthy()
+  })
+
+  it('un cliente no ve el enlace al panel', () => {
+    iniciarSesion('pedro@correo.cl')
     renderNavbar()
     expect(screen.getByText('Hola, Pedro')).toBeTruthy()
-    expect(screen.queryByRole('link', { name: 'Admin' })).toBeNull()
+    expect(screen.queryByRole('link', { name: 'Panel' })).toBeNull()
   })
 
   it('al cerrar sesión vuelve a mostrar Iniciar sesión', () => {
-    localStorage.setItem('zthorken-sesion', '2')
+    iniciarSesion('pedro@correo.cl')
     renderNavbar()
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
     expect(screen.getByRole('link', { name: 'Iniciar sesión' })).toBeTruthy()

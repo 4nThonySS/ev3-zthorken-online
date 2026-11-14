@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { getAll, getById, create, update, img } from '../../data/db.js'
+import { api, useApi, Estado } from '../../api.jsx'
+import { img } from '../../utils/formato.js'
 
 const VACIO = { nombre: '', descripcion: '', precio: '', precioOferta: '', stock: '', stockCritico: '', categoriaId: '', imagen: '' }
 
@@ -29,19 +30,14 @@ function validar(form) {
   return errores
 }
 
-// Sirve para crear (/admin/productos/nuevo) y para editar (/admin/productos/:id/editar)
+// Sirve para crear (/admin/productos/nuevo) y para editar (/admin/productos/:id/editar).
+// Primero carga el producto (si se edita) y las categorías; después muestra el formulario.
 function ProductoForm() {
   const { id } = useParams()
-  const existente = id ? getById('productos', id) : null
-  // Los inputs trabajan con texto, por eso se pasan los números a string
-  const [form, setForm] = useState(() =>
-    existente ? Object.fromEntries(Object.keys(VACIO).map((k) => [k, String(existente[k] ?? '')])) : VACIO,
-  )
-  const [errores, setErrores] = useState({})
-  const navigate = useNavigate()
-  const categorias = getAll('categorias')
+  const producto = useApi(id ? `/productos/${id}` : null)
+  const { datos: categorias, error } = useApi('/categorias')
 
-  if (id && !existente) {
+  if (producto.error?.status === 404 || producto.error?.status === 400) {
     return (
       <>
         <p>El producto no existe.</p>
@@ -49,12 +45,24 @@ function ProductoForm() {
       </>
     )
   }
+  if ((id && !producto.datos) || !categorias) return <Estado error={producto.error ?? error} />
+  return <Formulario key={id ?? 'nuevo'} id={id} existente={producto.datos} categorias={categorias} />
+}
+
+function Formulario({ id, existente, categorias }) {
+  // Los inputs trabajan con texto, por eso se pasan los números a string
+  const [form, setForm] = useState(() =>
+    existente ? Object.fromEntries(Object.keys(VACIO).map((k) => [k, String(existente[k] ?? '')])) : VACIO,
+  )
+  const [errores, setErrores] = useState({})
+  const [errorGuardar, setErrorGuardar] = useState('')
+  const navigate = useNavigate()
 
   function cambiar(e) {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  function enviar(e) {
+  async function enviar(e) {
     e.preventDefault()
     const nuevosErrores = validar(form)
     setErrores(nuevosErrores)
@@ -70,14 +78,21 @@ function ProductoForm() {
       categoriaId: Number(form.categoriaId),
       imagen: form.imagen.trim() || img(form.nombre.trim()),
     }
-    if (id) update('productos', id, datos)
-    else create('productos', datos)
-    navigate('/admin/productos')
+    try {
+      if (id) await api(`/productos/${id}`, { method: 'PUT', body: datos })
+      else await api('/productos', { method: 'POST', body: datos })
+      navigate('/admin/productos')
+    } catch (e) {
+      setErrorGuardar(e.message)
+      setErrores(e.campos)
+    }
   }
 
   return (
     <>
       <h1 className="h3 mb-4">{id ? 'Editar producto' : 'Nuevo producto'}</h1>
+
+      {errorGuardar && <div className="alert alert-danger" role="alert">{errorGuardar}</div>}
 
       <form onSubmit={enviar} noValidate style={{ maxWidth: 720 }}>
         <div className="row g-3">

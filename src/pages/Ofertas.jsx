@@ -1,11 +1,10 @@
 import { Link } from 'react-router-dom'
-import { getAll } from '../data/db.js'
+import { useApi, Estado } from '../api.jsx'
 import ProductCard from '../components/ProductCard.jsx'
 
 export default function Ofertas() {
-  const productos = getAll('productos').filter(
-    (p) => p.precioOferta !== null && p.precioOferta !== undefined
-  )
+  const { datos: productos, error } = useApi('/productos?oferta=true')
+  if (!productos) return <Estado error={error} />
 
   return (
     <div className="container my-4">

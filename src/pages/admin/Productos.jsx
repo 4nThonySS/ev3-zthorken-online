@@ -1,18 +1,27 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getAll, remove } from '../../data/db.js'
+import { api, useApi, Estado } from '../../api.jsx'
+import { useEsAdmin } from '../../context/sesion.js'
 import { formatearPrecio } from '../../utils/formato.js'
 import BotonEliminar from '../../components/BotonEliminar.jsx'
 
-// Con soloCriticos muestra solo los productos con stock <= stockCritico
+// Con soloCriticos muestra solo los productos con stock <= stockCritico.
+// El vendedor solo los ve: no aparecen los botones de crear, editar ni eliminar.
 function Productos({ soloCriticos = false }) {
-  const [productos, setProductos] = useState(() => getAll('productos'))
-  const categorias = getAll('categorias')
-  const lista = soloCriticos ? productos.filter((p) => p.stock <= p.stockCritico) : productos
+  const esAdmin = useEsAdmin()
+  const [error, setError] = useState('')
+  const { datos: productos, error: errorCarga, recargar } = useApi(soloCriticos ? '/productos/stock-critico' : '/productos')
+  if (!productos) return <Estado error={errorCarga} />
+  const lista = productos
 
-  function eliminar(id) {
-    remove('productos', id)
-    setProductos(getAll('productos'))
+  async function eliminar(id) {
+    try {
+      await api(`/productos/${id}`, { method: 'DELETE' })
+      setError('')
+      recargar()
+    } catch (e) {
+      setError(e.message)
+    }
   }
 
   return (
@@ -23,9 +32,11 @@ function Productos({ soloCriticos = false }) {
           {soloCriticos
             ? <Link className="btn btn-outline-secondary" to="/admin/productos">Ver todos</Link>
             : <Link className="btn btn-outline-danger" to="/admin/productos/criticos">Ver críticos</Link>}
-          <Link className="btn btn-primary" to="/admin/productos/nuevo">Nuevo producto</Link>
+          {esAdmin && <Link className="btn btn-primary" to="/admin/productos/nuevo">Nuevo producto</Link>}
         </div>
       </div>
+
+      {error && <div className="alert alert-danger" role="alert">{error}</div>}
 
       {lista.length === 0 ? (
         <p>{soloCriticos ? 'No hay productos con stock crítico.' : 'No hay productos.'}</p>
@@ -40,7 +51,7 @@ function Productos({ soloCriticos = false }) {
                 <th>Precio</th>
                 <th>Oferta</th>
                 <th>Stock</th>
-                <th>Acciones</th>
+                <th>{esAdmin ? 'Acciones' : ''}</th>
               </tr>
             </thead>
             <tbody>
@@ -53,7 +64,7 @@ function Productos({ soloCriticos = false }) {
                       {p.nombre}
                     </div>
                   </td>
-                  <td>{categorias.find((c) => c.id === p.categoriaId)?.nombre ?? '—'}</td>
+                  <td>{p.categoriaNombre}</td>
                   <td>{formatearPrecio(p.precio)}</td>
                   <td>{p.precioOferta ? formatearPrecio(p.precioOferta) : '—'}</td>
                   <td>
@@ -64,10 +75,14 @@ function Productos({ soloCriticos = false }) {
                     <Link className="btn btn-sm btn-outline-secondary me-1" to={`/admin/productos/${p.id}`} aria-label={`Ver ${p.nombre}`}>
                       Ver
                     </Link>
-                    <Link className="btn btn-sm btn-outline-primary me-1" to={`/admin/productos/${p.id}/editar`} aria-label={`Editar ${p.nombre}`}>
-                      Editar
-                    </Link>
-                    <BotonEliminar nombre={p.nombre} onEliminar={() => eliminar(p.id)} />
+                    {esAdmin && (
+                      <>
+                        <Link className="btn btn-sm btn-outline-primary me-1" to={`/admin/productos/${p.id}/editar`} aria-label={`Editar ${p.nombre}`}>
+                          Editar
+                        </Link>
+                        <BotonEliminar nombre={p.nombre} onEliminar={() => eliminar(p.id)} />
+                      </>
+                    )}
                   </td>
                 </tr>
               ))}

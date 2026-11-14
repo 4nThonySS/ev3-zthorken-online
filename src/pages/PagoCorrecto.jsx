@@ -1,11 +1,16 @@
-import { Link, useParams } from 'react-router-dom'
-import { getById } from '../data/db.js'
+import { Link, useLocation, useParams } from 'react-router-dom'
+import { useApi, Estado } from '../api.jsx'
+import { formatearFecha } from '../utils/formato.js'
 import { formatoCLP } from '../components/ProductCard.jsx'
 
 export default function PagoCorrecto() {
   const { id } = useParams()
-  const orden = getById('ordenes', id)
+  // Viene del checkout; si se recarga la página se pide al backend (solo con sesión)
+  const recibida = useLocation().state?.orden
+  const { datos, error } = useApi(recibida ? null : `/boletas/${id}`)
+  const orden = recibida ?? datos
 
+  if (!orden && !error) return <Estado />
   if (!orden) {
     return (
       <div className="container my-5 text-center">
@@ -25,7 +30,7 @@ export default function PagoCorrecto() {
         <div className="card-body">
           <h2 className="mb-1">Boleta</h2>
           <p className="fs-5">{`Orden N° ${orden.id}`}</p>
-          <p className="text-muted">Fecha: {orden.fecha}</p>
+          <p className="text-muted">Fecha: {formatearFecha(orden.fecha)}</p>
 
           <h6>Cliente</h6>
           <p>{cliente.nombre} {cliente.apellidos} ({cliente.correo})</p>

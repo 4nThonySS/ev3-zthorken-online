@@ -1,13 +1,16 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { CartProvider } from '../context/CartContext.jsx'
-import { getAll } from '../data/db.js'
+import { backend, instalarBackend } from '../test/backendFalso.js'
 import Ofertas from './Ofertas.jsx'
 
 describe('Ofertas', () => {
-  beforeEach(() => localStorage.clear())
+  beforeEach(() => {
+    localStorage.clear()
+    instalarBackend()
+  })
 
-  it('muestra solo productos con precioOferta', () => {
+  it('muestra solo productos con precioOferta', async () => {
     render(
       <MemoryRouter>
         <CartProvider>
@@ -15,7 +18,7 @@ describe('Ofertas', () => {
         </CartProvider>
       </MemoryRouter>
     )
-    const esperados = getAll('productos').filter((p) => p.precioOferta !== null)
-    expect(screen.getAllByText('Oferta').length).toBe(esperados.length)
+    const esperados = backend.productos.filter((p) => p.precioOferta !== null)
+    expect((await screen.findAllByText('Oferta')).length).toBe(esperados.length)
   })
 })

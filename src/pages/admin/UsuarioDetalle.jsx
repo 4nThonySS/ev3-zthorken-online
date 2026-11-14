@@ -1,12 +1,13 @@
 import { Link, useParams } from 'react-router-dom'
-import { getAll, getById } from '../../data/db.js'
+import { useApi, Estado } from '../../api.jsx'
 import { formatearFecha, formatearPrecio } from '../../utils/formato.js'
 
 function UsuarioDetalle() {
   const { id } = useParams()
-  const usuario = getById('usuarios', id)
+  const { datos: usuario, error } = useApi(`/usuarios/${id}`)
+  const { datos: compras } = useApi(`/boletas?usuarioId=${id}`)
 
-  if (!usuario) {
+  if (error?.status === 404 || error?.status === 400) {
     return (
       <>
         <p>El usuario no existe.</p>
@@ -15,11 +16,10 @@ function UsuarioDetalle() {
     )
   }
 
-  // Historial de compras, más recientes primero
-  const compras = getAll('ordenes')
-    .filter((o) => o.usuarioId === usuario.id)
-    .sort((a, b) => b.fecha.localeCompare(a.fecha))
-  const totalGastado = compras.reduce((suma, o) => suma + o.total, 0)
+  if (!usuario || !compras) return <Estado error={error} />
+
+  // Historial de compras (el backend las entrega de la más reciente a la más antigua); las anuladas no suman
+  const totalGastado = compras.filter((o) => o.estado === 'PAGADA').reduce((suma, o) => suma + o.total, 0)
 
   const datos = [
     { titulo: 'Correo', valor: usuario.correo },

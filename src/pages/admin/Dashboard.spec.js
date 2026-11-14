@@ -1,38 +1,41 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import Dashboard from './Dashboard.jsx'
-import { create, resetDB } from '../../data/db.js'
+import { backend, instalarBackend } from '../../test/backendFalso.js'
 
 function renderDashboard() {
   return render(<MemoryRouter><Dashboard /></MemoryRouter>)
 }
 
-describe('Dashboard', () => {
-  beforeEach(() => resetDB())
+const tarjeta = (titulo) => screen.getByRole('heading', { name: titulo }).nextElementSibling.textContent
 
-  it('muestra las tarjetas con los totales', () => {
+describe('Dashboard', () => {
+  beforeEach(() => instalarBackend())
+
+  it('muestra las tarjetas con los totales del backend', async () => {
     renderDashboard()
-    expect(screen.getByRole('heading', { name: 'Compras' }).nextElementSibling.textContent).toBe('1')
-    expect(screen.getByRole('heading', { name: 'Productos' }).nextElementSibling.textContent).toBe('12')
-    expect(screen.getByRole('heading', { name: 'Usuarios' }).nextElementSibling.textContent).toBe('2')
+    await screen.findByRole('heading', { name: 'Compras' })
+    expect(tarjeta('Compras')).toBe('1')
+    expect(tarjeta('Productos')).toBe('12')
+    expect(tarjeta('Usuarios')).toBe('3')
   })
 
-  it('muestra el total vendido, los productos críticos y los clientes', () => {
+  it('muestra el total vendido, los productos críticos y los clientes', async () => {
     renderDashboard()
-    expect(screen.getByText('Total vendido: $129.970')).toBeTruthy()
+    expect(await screen.findByText('Total vendido: $129.970')).toBeTruthy()
     expect(screen.getByText('En stock crítico: 3')).toBeTruthy()
     expect(screen.getByText('Clientes: 1')).toBeTruthy()
   })
 
-  it('se actualiza con los datos nuevos', () => {
-    create('usuarios', { nombre: 'Ana', rol: 'cliente' })
+  it('no cuenta las boletas anuladas como venta', async () => {
+    backend.boletas[0].estado = 'ANULADA'
     renderDashboard()
-    expect(screen.getByRole('heading', { name: 'Usuarios' }).nextElementSibling.textContent).toBe('3')
+    expect(await screen.findByText('Total vendido: $0')).toBeTruthy()
   })
 
-  it('tiene accesos directos', () => {
+  it('tiene accesos directos', async () => {
     renderDashboard()
-    expect(screen.getByRole('link', { name: 'Nuevo producto' }).getAttribute('href')).toBe('/admin/productos/nuevo')
+    expect((await screen.findByRole('link', { name: 'Nuevo producto' })).getAttribute('href')).toBe('/admin/productos/nuevo')
     expect(screen.getByRole('link', { name: 'Productos críticos' }).getAttribute('href')).toBe('/admin/productos/criticos')
   })
 })

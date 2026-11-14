@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { CartProvider } from '../context/CartContext.jsx'
-import { getAll } from '../data/db.js'
+import { backend, instalarBackend } from '../test/backendFalso.js'
 import CategoriaDetalle from './CategoriaDetalle.jsx'
 
 const montar = (id) =>
@@ -16,16 +16,20 @@ const montar = (id) =>
   )
 
 describe('CategoriaDetalle', () => {
-  beforeEach(() => localStorage.clear())
-
-  it('muestra solo los productos de la categoría', () => {
-    montar(1)
-    const esperados = getAll('productos').filter((p) => p.categoriaId === 1)
-    expect(screen.getAllByText('Agregar al carrito').length).toBe(esperados.length)
+  beforeEach(() => {
+    localStorage.clear()
+    instalarBackend()
   })
 
-  it('muestra mensaje si la categoría no existe', () => {
+  it('muestra solo los productos de la categoría', async () => {
+    montar(1)
+    const esperados = backend.productos.filter((p) => p.categoriaId === 1)
+    expect((await screen.findAllByText('Agregar al carrito')).length).toBe(esperados.length)
+    expect(backend.peticiones).toContain('GET /productos?categoriaId=1')
+  })
+
+  it('muestra mensaje si la categoría no existe', async () => {
     montar(999)
-    expect(screen.getByText('Categoría no encontrada')).toBeTruthy()
+    expect(await screen.findByText('Categoría no encontrada')).toBeTruthy()
   })
 })

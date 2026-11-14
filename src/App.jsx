@@ -7,7 +7,7 @@ import Nosotros from './pages/Nosotros.jsx'
 import Contacto from './pages/Contacto.jsx'
 import Blogs from './pages/Blogs.jsx'
 import BlogDetalle from './pages/BlogDetalle.jsx'
-import AdminLayout from './components/AdminLayout.jsx'
+import AdminLayout, { SoloAdmin } from './components/AdminLayout.jsx'
 import Productos from './pages/Productos.jsx'
 import ProductoDetalle from './pages/ProductoDetalle.jsx'
 import Carrito from './pages/Carrito.jsx'
@@ -58,23 +58,28 @@ function App() {
       </Route>
 
       <Route path="/admin" element={<AdminLayout />}>
-        <Route index element={<Dashboard />} />
+        {/* Admin y vendedor: ver productos y órdenes con su detalle */}
         <Route path="productos" element={<AdminProductos />} />
         <Route path="productos/criticos" element={<AdminProductos soloCriticos />} />
-        <Route path="productos/nuevo" element={<ProductoForm />} />
         <Route path="productos/:id" element={<AdminProductoDetalle />} />
-        <Route path="productos/:id/editar" element={<ProductoForm />} />
-        <Route path="categorias" element={<AdminCategorias />} />
-        <Route path="categorias/nueva" element={<CategoriaForm />} />
-        <Route path="categorias/:id/editar" element={<CategoriaForm />} />
-        <Route path="usuarios" element={<AdminUsuarios />} />
-        <Route path="usuarios/nuevo" element={<UsuarioForm />} />
-        <Route path="usuarios/:id" element={<UsuarioDetalle />} />
-        <Route path="usuarios/:id/editar" element={<UsuarioForm />} />
         <Route path="ordenes" element={<Ordenes />} />
         <Route path="ordenes/:id" element={<Boleta />} />
-        <Route path="reportes" element={<Reportes />} />
         <Route path="perfil" element={<Perfil />} />
+
+        {/* Solo admin */}
+        <Route element={<SoloAdmin />}>
+          <Route index element={<Dashboard />} />
+          <Route path="productos/nuevo" element={<ProductoForm />} />
+          <Route path="productos/:id/editar" element={<ProductoForm />} />
+          <Route path="categorias" element={<AdminCategorias />} />
+          <Route path="categorias/nueva" element={<CategoriaForm />} />
+          <Route path="categorias/:id/editar" element={<CategoriaForm />} />
+          <Route path="usuarios" element={<AdminUsuarios />} />
+          <Route path="usuarios/nuevo" element={<UsuarioForm />} />
+          <Route path="usuarios/:id" element={<UsuarioDetalle />} />
+          <Route path="usuarios/:id/editar" element={<UsuarioForm />} />
+          <Route path="reportes" element={<Reportes />} />
+        </Route>
       </Route>
     </Routes>
   )

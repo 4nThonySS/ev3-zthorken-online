@@ -1,10 +1,14 @@
-import { getAll } from '../../data/db.js'
+import { useApi, Estado } from '../../api.jsx'
 import { formatearPrecio } from '../../utils/formato.js'
 
 function Reportes() {
-  const ordenes = getAll('ordenes')
-  const productos = getAll('productos')
-  const categorias = getAll('categorias')
+  const boletas = useApi('/boletas')
+  const productos = useApi('/productos').datos
+  const categorias = useApi('/categorias').datos
+  if (!boletas.datos || !productos || !categorias) return <Estado error={boletas.error} />
+
+  // Las boletas anuladas no cuentan como venta
+  const ordenes = boletas.datos.filter((o) => o.estado === 'PAGADA')
 
   // Unidades y monto vendidos de cada producto, según las órdenes
   const ventas = {}

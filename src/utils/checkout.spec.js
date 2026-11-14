@@ -1,4 +1,4 @@
-import { getById, getAll } from '../data/db.js'
+import { backend, instalarBackend } from '../test/backendFalso.js'
 import { validarCheckout, procesarPago } from './checkout.js'
 
 const completo = {
@@ -22,27 +22,27 @@ describe('validarCheckout', () => {
 })
 
 describe('procesarPago', () => {
-  beforeEach(() => localStorage.clear())
+  beforeEach(() => instalarBackend())
 
-  it('crea la orden y descuenta el stock', () => {
-    const antes = getById('productos', 5).stock
-    const items = [{ productoId: 5, nombre: 'Audífonos', precio: 59990, cantidad: 2 }]
-    const r = procesarPago({ items, total: 119980, cliente, direccion, usuarioId: null })
+  it('envía solo producto y cantidad; el backend calcula el total', async () => {
+    const items = [{ productoId: 5, nombre: 'Audífonos', precio: 1, cantidad: 2 }]
+    const r = await procesarPago({ items, cliente, direccion })
     expect(r.ok).toBe(true)
-    expect(getById('productos', 5).stock).toBe(antes - 2)
-    expect(getAll('ordenes').length).toBe(2)
+    expect(r.orden.total).toBe(2 * 59990)
+    expect(JSON.parse(window.fetch.calls.mostRecent().args[1].body).items).toEqual([{ productoId: 5, cantidad: 2 }])
+    expect(backend.boletas.length).toBe(2)
   })
 
-  it('rechaza si la cantidad supera el stock', () => {
+  it('devuelve el mensaje del backend si la cantidad supera el stock', async () => {
     const items = [{ productoId: 4, nombre: 'ASUS TUF', precio: 949990, cantidad: 3 }]
-    const r = procesarPago({ items, total: 2849970, cliente, direccion, usuarioId: null })
-    expect(r.ok).toBe(false)
-    expect(getById('productos', 4).stock).toBe(2)
-    expect(getAll('ordenes').length).toBe(1)
+    const r = await procesarPago({ items, cliente, direccion })
+    expect(r).toEqual({ ok: false, error: 'Stock insuficiente para Notebook ASUS TUF Gaming F15: disponible 2, solicitado 3' })
+    expect(backend.productos[3].stock).toBe(2)
   })
 
-  it('rechaza un carrito vacío', () => {
-    const r = procesarPago({ items: [], total: 0, cliente, direccion, usuarioId: null })
+  it('rechaza un carrito vacío sin llamar al backend', async () => {
+    const r = await procesarPago({ items: [], cliente, direccion })
     expect(r.ok).toBe(false)
+    expect(backend.peticiones).toEqual([])
   })
 })

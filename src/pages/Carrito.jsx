@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom'
 import { useCart } from '../context/CartContext.jsx'
-import { getById } from '../data/db.js'
+import { useApi } from '../api.jsx'
 import { formatoCLP } from '../components/ProductCard.jsx'
 
 export default function Carrito() {
   const { items, cambiarCantidad, quitar, limpiar, total } = useCart()
+  // Stock e imagen actuales de cada producto (mientras carga no se limita la cantidad)
+  const productos = useApi('/productos').datos ?? []
 
   if (items.length === 0) {
     return (
@@ -34,7 +36,7 @@ export default function Carrito() {
           </thead>
           <tbody>
             {items.map((i) => {
-              const producto = getById('productos', i.productoId)
+              const producto = productos.find((p) => p.id === i.productoId)
               const stock = producto?.stock ?? Infinity
               return (
                 <tr key={i.productoId}>

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { getAll } from '../data/db.js'
+import { useApi } from '../api.jsx'
 import { useSesion } from '../context/sesion.js'
 
 const enlaces = [
@@ -32,8 +32,8 @@ const iconoCarrito = (
 function Navbar({ totalCarrito = 0 }) {
   const [busqueda, setBusqueda] = useState('')
   const navigate = useNavigate()
-  const categorias = getAll('categorias')
-  const { usuario, esAdmin, logout } = useSesion()
+  const categorias = useApi('/categorias').datos ?? []
+  const { usuario, esAdmin, esVendedor, logout } = useSesion()
 
   function cerrarSesion() {
     logout()
@@ -123,7 +123,7 @@ function Navbar({ totalCarrito = 0 }) {
                 <ul className="dropdown-menu dropdown-menu-xl-end">
                   {usuario ? (
                     <>
-                      {esAdmin && <li><Link className="dropdown-item" to="/admin">Admin</Link></li>}
+                      {(esAdmin || esVendedor) && <li><Link className="dropdown-item" to="/admin">Panel</Link></li>}
                       <li>
                         <button className="dropdown-item" type="button" onClick={cerrarSesion}>Cerrar sesión</button>
                       </li>

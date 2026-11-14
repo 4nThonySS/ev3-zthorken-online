@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import Registro from './Registro.jsx'
 import { SesionProvider } from '../context/SesionProvider.jsx'
-import { getAll, resetDB } from '../data/db.js'
+import { backend, instalarBackend } from '../test/backendFalso.js'
 
 function renderRegistro() {
   return render(
@@ -36,10 +36,7 @@ function enviar() {
 }
 
 describe('Registro', () => {
-  beforeEach(() => {
-    resetDB()
-    localStorage.removeItem('zthorken-sesion')
-  })
+  beforeEach(() => instalarBackend())
 
   it('muestra errores en todos los campos si se envía vacío', () => {
     renderRegistro()
@@ -55,24 +52,24 @@ describe('Registro', () => {
     llenar({ ...datosValidos, 'Confirmar contraseña': 'otra123' })
     enviar()
     expect(screen.getByText('Las contraseñas no coinciden')).toBeTruthy()
-    expect(getAll('usuarios').length).toBe(2)
+    expect(backend.peticiones).toEqual([])
   })
 
-  it('no permite un correo ya registrado', () => {
+  it('muestra el error del backend si el correo ya está registrado', async () => {
     renderRegistro()
     llenar({ ...datosValidos, Correo: 'pedro@correo.cl' })
     enviar()
-    expect(screen.getByRole('alert').textContent).toBe('Ya existe una cuenta con ese correo')
+    expect((await screen.findByRole('alert')).textContent).toBe('Ya existe un usuario con el correo pedro@correo.cl')
   })
 
-  it('crea la cuenta, inicia sesión y redirige al inicio', () => {
+  it('crea la cuenta en el backend, inicia sesión y redirige al inicio', async () => {
     renderRegistro()
     llenar(datosValidos)
     enviar()
-    expect(screen.getByText('Página de inicio')).toBeTruthy()
-    const nuevo = getAll('usuarios').find((u) => u.correo === 'ana@correo.cl')
-    expect(nuevo.rol).toBe('cliente')
+    expect(await screen.findByText('Página de inicio')).toBeTruthy()
+    const nuevo = backend.usuarios.find((u) => u.correo === 'ana@correo.cl')
+    expect(nuevo.rol).toBe('CLIENTE')
     expect(nuevo.confirmar).toBeUndefined()
-    expect(localStorage.getItem('zthorken-sesion')).toBe(String(nuevo.id))
+    expect(JSON.parse(localStorage.getItem('zthorken-sesion')).usuario.id).toBe(nuevo.id)
   })
 })

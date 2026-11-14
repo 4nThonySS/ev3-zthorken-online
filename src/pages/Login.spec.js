@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import Login from './Login.jsx'
 import { SesionProvider } from '../context/SesionProvider.jsx'
-import { resetDB } from '../data/db.js'
+import { instalarBackend } from '../test/backendFalso.js'
 
 function renderLogin() {
   return render(
@@ -22,10 +22,7 @@ function escribir(label, valor) {
 }
 
 describe('Login', () => {
-  beforeEach(() => {
-    resetDB()
-    localStorage.removeItem('zthorken-sesion')
-  })
+  beforeEach(() => instalarBackend())
 
   it('actualiza el estado del formulario al escribir', () => {
     renderLogin()
@@ -54,21 +51,21 @@ describe('Login', () => {
     expect(screen.getByText('El correo no es válido')).toBeTruthy()
   })
 
-  it('muestra un error con credenciales incorrectas', () => {
+  it('muestra el error del backend con credenciales incorrectas', async () => {
     renderLogin()
     escribir('Correo', 'pedro@correo.cl')
     escribir('Contraseña', 'incorrecta')
     fireEvent.click(screen.getByRole('button', { name: 'Ingresar' }))
-    expect(screen.getByRole('alert').textContent).toBe('Correo o contraseña incorrectos')
+    expect((await screen.findByRole('alert')).textContent).toBe('Correo o contraseña incorrectos')
   })
 
-  it('inicia sesión y redirige al inicio', () => {
+  it('inicia sesión, guarda el token y redirige al inicio', async () => {
     renderLogin()
     escribir('Correo', 'pedro@correo.cl')
     escribir('Contraseña', 'pedro123')
     fireEvent.click(screen.getByRole('button', { name: 'Ingresar' }))
-    expect(screen.getByText('Página de inicio')).toBeTruthy()
-    expect(localStorage.getItem('zthorken-sesion')).toBe('2')
+    expect(await screen.findByText('Página de inicio')).toBeTruthy()
+    expect(JSON.parse(localStorage.getItem('zthorken-sesion')).token).toBe('token-3')
   })
 
   it('tiene un enlace a registro', () => {

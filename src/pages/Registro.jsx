@@ -35,7 +35,7 @@ function Registro() {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  function enviar(e) {
+  async function enviar(e) {
     e.preventDefault()
     const nuevosErrores = validar(form)
     setErrores(nuevosErrores)
@@ -43,7 +43,7 @@ function Registro() {
     if (Object.keys(nuevosErrores).length > 0) return
 
     const { confirmar: _confirmar, ...datos } = form
-    const respuesta = registrar({ ...datos, nombre: datos.nombre.trim(), apellidos: datos.apellidos.trim() })
+    const respuesta = await registrar({ ...datos, nombre: datos.nombre.trim(), apellidos: datos.apellidos.trim() })
     if (respuesta.ok) navigate('/')
     else setErrorRegistro(respuesta.error)
   }

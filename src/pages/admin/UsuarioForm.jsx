@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { getAll, getById, create, update } from '../../data/db.js'
+import { api, useApi, Estado } from '../../api.jsx'
 import { useSesion } from '../../context/sesion.js'
 import { esCorreoValido } from '../../utils/validaciones.js'
 
-const VACIO = { nombre: '', apellidos: '', correo: '', password: '', rol: 'cliente', calle: '', departamento: '', region: '', comuna: '' }
+const VACIO = { nombre: '', apellidos: '', correo: '', password: '', rol: 'CLIENTE', calle: '', departamento: '', region: '', comuna: '' }
 
 const campos = [
   { name: 'nombre', label: 'Nombre', type: 'text', col: 'col-md-6' },
@@ -17,7 +17,7 @@ const campos = [
   { name: 'comuna', label: 'Comuna (opcional)', type: 'text', col: 'col-md-6' },
 ]
 
-// Al editar, la contraseña vacía significa "no cambiarla"
+// Al editar, la contraseña vacía significa "no cambiarla". El correo repetido lo revisa el backend.
 function validar(form, id) {
   const errores = {}
   const correo = form.correo.trim().toLowerCase()
@@ -25,9 +25,6 @@ function validar(form, id) {
   if (!form.apellidos.trim()) errores.apellidos = 'Ingresa los apellidos'
   if (!correo) errores.correo = 'Ingresa el correo'
   else if (!esCorreoValido(correo)) errores.correo = 'El correo no es válido'
-  else if (getAll('usuarios').some((u) => u.correo.toLowerCase() === correo && u.id !== Number(id))) {
-    errores.correo = 'Ya existe una cuenta con ese correo'
-  }
   if ((!id || form.password) && form.password.length < 6) errores.password = 'La contraseña debe tener al menos 6 caracteres'
   return errores
 }
@@ -35,15 +32,9 @@ function validar(form, id) {
 // Sirve para crear (/admin/usuarios/nuevo) y para editar (/admin/usuarios/:id/editar)
 function UsuarioForm() {
   const { id } = useParams()
-  const existente = id ? getById('usuarios', id) : null
-  const [form, setForm] = useState(() => (existente ? { ...VACIO, ...existente, password: '' } : VACIO))
-  const [errores, setErrores] = useState({})
-  const navigate = useNavigate()
-  const { usuario: actual } = useSesion()
-  // El admin no puede quitarse su propio rol
-  const esUnoMismo = existente?.id === actual?.id
+  const { datos, error } = useApi(id ? `/usuarios/${id}` : null)
 
-  if (id && !existente) {
+  if (error?.status === 404 || error?.status === 400) {
     return (
       <>
         <p>El usuario no existe.</p>
@@ -51,12 +42,27 @@ function UsuarioForm() {
       </>
     )
   }
+  if (id && !datos) return <Estado error={error} />
+  return <Formulario key={id ?? 'nuevo'} id={id} existente={datos} />
+}
+
+function Formulario({ id, existente }) {
+  // El backend no devuelve la contraseña; los campos vacíos llegan como null
+  const [form, setForm] = useState(() =>
+    existente ? { ...VACIO, ...Object.fromEntries(Object.entries(existente).map(([k, v]) => [k, v ?? ''])), password: '' } : VACIO,
+  )
+  const [errores, setErrores] = useState({})
+  const [errorGuardar, setErrorGuardar] = useState('')
+  const navigate = useNavigate()
+  const { usuario: actual } = useSesion()
+  // El admin no puede quitarse su propio rol
+  const esUnoMismo = existente?.id === actual?.id
 
   function cambiar(e) {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  function enviar(e) {
+  async function enviar(e) {
     e.preventDefault()
     const nuevosErrores = validar(form, id)
     setErrores(nuevosErrores)
@@ -67,14 +73,21 @@ function UsuarioForm() {
     datos.password = form.password
     if (!datos.password) delete datos.password
 
-    if (id) update('usuarios', id, datos)
-    else create('usuarios', datos)
-    navigate('/admin/usuarios')
+    try {
+      if (id) await api(`/usuarios/${id}`, { method: 'PUT', body: datos })
+      else await api('/usuarios', { method: 'POST', body: datos })
+      navigate('/admin/usuarios')
+    } catch (e) {
+      setErrorGuardar(e.message)
+      setErrores(e.campos)
+    }
   }
 
   return (
     <>
       <h1 className="h3 mb-4">{id ? 'Editar usuario' : 'Nuevo usuario'}</h1>
+
+      {errorGuardar && <div className="alert alert-danger" role="alert">{errorGuardar}</div>}
 
       <form onSubmit={enviar} noValidate style={{ maxWidth: 720 }}>
         <div className="row g-3">
@@ -97,8 +110,9 @@ function UsuarioForm() {
           <div className="col-md-6">
             <label htmlFor="rol" className="form-label">Rol</label>
             <select id="rol" name="rol" className="form-select" value={form.rol} onChange={cambiar} disabled={esUnoMismo}>
-              <option value="cliente">Cliente</option>
-              <option value="admin">Administrador</option>
+              <option value="CLIENTE">Cliente</option>
+              <option value="VENDEDOR">Vendedor</option>
+              <option value="ADMIN">Administrador</option>
             </select>
             {esUnoMismo && <div className="form-text">No puedes cambiar tu propio rol.</div>}
           </div>

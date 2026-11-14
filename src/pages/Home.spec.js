@@ -1,14 +1,14 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import Home from './Home.jsx'
-import { getAll, resetDB } from '../data/db.js'
+import { backend, instalarBackend } from '../test/backendFalso.js'
 
 function renderHome() {
   return render(<MemoryRouter><Home /></MemoryRouter>)
 }
 
 describe('Home', () => {
-  beforeEach(() => resetDB())
+  beforeEach(() => instalarBackend())
 
   it('muestra el título de la tienda', () => {
     renderHome()
@@ -20,11 +20,11 @@ describe('Home', () => {
     expect(screen.getByRole('heading', { name: 'Nuevos lanzamientos' })).toBeTruthy()
   })
 
-  it('muestra todas las categorías con enlace a su página', () => {
+  it('muestra todas las categorías del backend con enlace a su página', async () => {
     renderHome()
-    for (const c of getAll('categorias')) {
-      const enlace = screen.getByRole('link', { name: c.nombre })
-      expect(enlace.getAttribute('href')).toBe(`/categorias/${c.id}`)
+    await screen.findByRole('link', { name: 'Audio' })
+    for (const c of backend.categorias) {
+      expect(screen.getByRole('link', { name: c.nombre }).getAttribute('href')).toBe(`/categorias/${c.id}`)
     }
   })
 })

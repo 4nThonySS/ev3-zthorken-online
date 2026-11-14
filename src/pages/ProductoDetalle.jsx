@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { getById } from '../data/db.js'
+import { useApi, Estado } from '../api.jsx'
 import { useCart } from '../context/CartContext.jsx'
 import { useEsAdmin } from '../context/sesion.js'
 import AvisoAdmin from '../components/AvisoAdmin.jsx'
@@ -14,9 +14,9 @@ export default function ProductoDetalle() {
   const [agregado, setAgregado] = useState(false)
   const [avisoAbierto, setAvisoAbierto] = useState(false)
 
-  const producto = getById('productos', id)
+  const { datos: producto, error } = useApi(`/productos/${id}`)
 
-  if (!producto) {
+  if (error?.status === 404 || error?.status === 400) {
     return (
       <div className="container my-5 text-center">
         <h1>Producto no encontrado</h1>
@@ -24,6 +24,8 @@ export default function ProductoDetalle() {
       </div>
     )
   }
+
+  if (!producto) return <Estado error={error} />
 
   const enOferta = producto.precioOferta !== null
   const sinStock = producto.stock <= 0

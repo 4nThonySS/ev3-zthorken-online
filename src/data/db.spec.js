@@ -4,21 +4,20 @@ describe('db', () => {
   beforeEach(() => resetDB())
 
   it('carga los datos iniciales', () => {
-    expect(getAll('productos').length).toBeGreaterThan(0)
-    expect(getById('usuarios', 1).rol).toBe('admin')
+    expect(getAll('blogs').length).toBe(2)
+    expect(getAll('mensajes')).toEqual([])
   })
 
   it('crea un registro con id nuevo', () => {
-    const total = getAll('categorias').length
-    const nueva = create('categorias', { nombre: 'Accesorios' })
-    expect(nueva.id).toBe(total + 1)
-    expect(getById('categorias', nueva.id).nombre).toBe('Accesorios')
+    const nuevo = create('mensajes', { nombre: 'Ana' })
+    expect(nuevo.id).toBe(1)
+    expect(getById('mensajes', nuevo.id).nombre).toBe('Ana')
   })
 
   it('actualiza un registro sin cambiar su id', () => {
-    const editado = update('productos', 1, { precio: 1000, id: 99 })
+    const editado = update('blogs', 1, { titulo: 'Nuevo', id: 99 })
     expect(editado.id).toBe(1)
-    expect(getById('productos', 1).precio).toBe(1000)
+    expect(getById('blogs', 1).titulo).toBe('Nuevo')
   })
 
   it('elimina un registro', () => {
@@ -28,18 +27,18 @@ describe('db', () => {
   })
 
   it('persiste en localStorage', () => {
-    create('categorias', { nombre: 'Accesorios' })
-    const guardado = JSON.parse(localStorage.getItem('zthorken-db-v2'))
-    expect(guardado.categorias.some((c) => c.nombre === 'Accesorios')).toBeTrue()
+    create('mensajes', { nombre: 'Ana' })
+    const guardado = JSON.parse(localStorage.getItem('zthorken-db-v3'))
+    expect(guardado.mensajes.some((m) => m.nombre === 'Ana')).toBeTrue()
   })
 
   it('agrega colecciones nuevas a datos guardados de antes', () => {
-    localStorage.setItem('zthorken-db-v2', JSON.stringify({ productos: [] }))
+    localStorage.setItem('zthorken-db-v3', JSON.stringify({ blogs: [] }))
     expect(getAll('mensajes')).toEqual([])
-    expect(getAll('productos')).toEqual([])
+    expect(getAll('blogs')).toEqual([])
   })
 
-  it('lanza error con una colección que no existe', () => {
-    expect(() => getAll('noExiste')).toThrowError(/no existe/)
+  it('lanza error con una colección que no existe (productos ahora vienen del backend)', () => {
+    expect(() => getAll('productos')).toThrowError(/no existe/)
   })
 })

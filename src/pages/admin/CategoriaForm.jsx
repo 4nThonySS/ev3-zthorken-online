@@ -1,26 +1,23 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { getAll, getById, create, update, img } from '../../data/db.js'
+import { api, useApi, Estado } from '../../api.jsx'
+import { img } from '../../utils/formato.js'
 
-function validar(form, id) {
+// El nombre repetido lo revisa el backend
+function validar(form) {
   const errores = {}
   const nombre = form.nombre.trim()
-  const repetida = getAll('categorias').some((c) => c.nombre.toLowerCase() === nombre.toLowerCase() && c.id !== Number(id))
   if (!nombre) errores.nombre = 'Ingresa el nombre'
   else if (nombre.length > 50) errores.nombre = 'El nombre no puede tener más de 50 caracteres'
-  else if (repetida) errores.nombre = 'Ya existe una categoría con ese nombre'
   return errores
 }
 
 // Sirve para crear (/admin/categorias/nueva) y para editar (/admin/categorias/:id/editar)
 function CategoriaForm() {
   const { id } = useParams()
-  const existente = id ? getById('categorias', id) : null
-  const [form, setForm] = useState({ nombre: existente?.nombre ?? '', imagen: existente?.imagen ?? '' })
-  const [errores, setErrores] = useState({})
-  const navigate = useNavigate()
+  const { datos, error } = useApi(id ? `/categorias/${id}` : null)
 
-  if (id && !existente) {
+  if (error?.status === 404 || error?.status === 400) {
     return (
       <>
         <p>La categoría no existe.</p>
@@ -28,21 +25,33 @@ function CategoriaForm() {
       </>
     )
   }
+  if (id && !datos) return <Estado error={error} />
+  return <Formulario key={id ?? 'nueva'} id={id} existente={datos} />
+}
+
+function Formulario({ id, existente }) {
+  const [form, setForm] = useState({ nombre: existente?.nombre ?? '', imagen: existente?.imagen ?? '' })
+  const [errores, setErrores] = useState({})
+  const navigate = useNavigate()
 
   function cambiar(e) {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  function enviar(e) {
+  async function enviar(e) {
     e.preventDefault()
-    const nuevosErrores = validar(form, id)
+    const nuevosErrores = validar(form)
     setErrores(nuevosErrores)
     if (Object.keys(nuevosErrores).length > 0) return
 
     const datos = { nombre: form.nombre.trim(), imagen: form.imagen.trim() || img(form.nombre.trim()) }
-    if (id) update('categorias', id, datos)
-    else create('categorias', datos)
-    navigate('/admin/categorias')
+    try {
+      if (id) await api(`/categorias/${id}`, { method: 'PUT', body: datos })
+      else await api('/categorias', { method: 'POST', body: datos })
+      navigate('/admin/categorias')
+    } catch (e) {
+      setErrores({ nombre: e.campos.nombre ?? e.message })
+    }
   }
 
   return (
