@@ -5,7 +5,6 @@ import { formatoCLP } from '../components/ProductCard.jsx'
 
 export default function Carrito() {
   const { items, cambiarCantidad, quitar, limpiar, total } = useCart()
-  // Stock e imagen actuales de cada producto (mientras carga no se limita la cantidad)
   const productos = useApi('/productos').datos ?? []
 
   if (items.length === 0) {

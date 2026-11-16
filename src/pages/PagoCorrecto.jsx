@@ -5,7 +5,6 @@ import { formatoCLP } from '../components/ProductCard.jsx'
 
 export default function PagoCorrecto() {
   const { id } = useParams()
-  // Viene del checkout; si se recarga la página se pide al backend (solo con sesión)
   const recibida = useLocation().state?.orden
   const { datos, error } = useApi(recibida ? null : `/boletas/${id}`)
   const orden = recibida ?? datos

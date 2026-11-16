@@ -58,7 +58,6 @@ function Usuarios() {
                     <Link className="btn btn-sm btn-outline-primary me-1" to={`/admin/usuarios/${u.id}/editar`} aria-label={`Editar ${nombre}`}>
                       Editar
                     </Link>
-                    {/* El admin no puede eliminarse a sí mismo */}
                     {u.id !== actual?.id && <BotonEliminar nombre={nombre} onEliminar={() => eliminar(u.id)} />}
                   </td>
                 </tr>

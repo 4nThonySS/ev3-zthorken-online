@@ -1,8 +1,6 @@
 import { useEffect } from 'react'
 
-// Popup (modal de Bootstrap controlado con estado de React) para cuentas de administrador
 export default function AvisoAdmin({ abierto, onCerrar }) {
-  // Se cierra con la tecla Escape
   useEffect(() => {
     if (!abierto) return
     const alPresionar = (e) => e.key === 'Escape' && onCerrar()

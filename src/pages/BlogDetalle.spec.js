@@ -26,7 +26,6 @@ describe('BlogDetalle', () => {
   it('separa el contenido en párrafos', () => {
     const { container } = renderDetalle(1)
     const parrafos = getById('blogs', 1).contenido.split('\n\n').length
-    // + fecha + resumen
     expect(container.querySelectorAll('article p').length).toBe(parrafos + 2)
   })
 

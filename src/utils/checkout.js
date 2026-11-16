@@ -11,9 +11,6 @@ export function validarCheckout(d) {
   return errores
 }
 
-// Crea la boleta en el backend, que usa el precio vigente, calcula el total, revisa y descuenta el stock.
-// Si hay sesión, la boleta queda a nombre del usuario del token.
-// Devuelve { ok: true, orden } o { ok: false, error }
 export async function procesarPago({ items, cliente, direccion }) {
   if (items.length === 0) return { ok: false, error: 'Tu carrito está vacío' }
   try {

@@ -1,8 +1,6 @@
-// Los tests van en archivos *.spec.js (pueden usar JSX).
 const fs = require('fs')
 const { createInstrumenter } = require('istanbul-lib-instrument')
 
-// Marca el código de src/ (menos los tests y src/test/) para medir qué líneas se ejecutan
 const instrumentador = createInstrumenter({ esModules: true, parserPlugins: ['jsx'] })
 const cobertura = {
   name: 'cobertura',
@@ -21,7 +19,6 @@ module.exports = function (config) {
     plugins: ['karma-jasmine', 'karma-chrome-launcher', 'karma-esbuild', 'karma-coverage'],
     files: [
       'src/**/*.spec.js',
-      // Las imágenes de public/ se sirven para que los tests no muestren 404
       { pattern: 'public/**/*', included: false, served: true, watched: false },
     ],
     proxies: { '/img/': '/base/public/img/' },

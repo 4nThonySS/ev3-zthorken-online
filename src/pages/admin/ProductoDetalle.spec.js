@@ -17,7 +17,6 @@ function renderDetalle(id, rol = 'ADMIN') {
   )
 }
 
-// Valor que aparece debajo de un título de la ficha, cuando ya cargó
 async function valor(titulo) {
   return (await screen.findByText(titulo)).nextElementSibling.textContent
 }

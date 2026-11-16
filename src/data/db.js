@@ -1,7 +1,4 @@
-// Datos que el backend no maneja (blog y mensajes de contacto). Se guardan en localStorage
-// y se inicializan con SEED la primera vez. Productos, categorías, usuarios y órdenes vienen de la API (src/api.jsx).
 
-// Se cambia la versión cuando cambian los datos iniciales, para que se vuelvan a cargar
 const STORAGE_KEY = 'zthorken-db-v3'
 
 const SEED = {
@@ -39,10 +36,8 @@ const SEED = {
 function load() {
   try {
     const data = JSON.parse(localStorage.getItem(STORAGE_KEY))
-    // Si se agregan colecciones nuevas a SEED, se suman a los datos ya guardados
     if (data) return { ...structuredClone(SEED), ...data }
   } catch {
-    // datos corruptos: se vuelve a la semilla
   }
   const data = structuredClone(SEED)
   save(data)
@@ -58,7 +53,6 @@ function getCollection(data, coleccion) {
   return data[coleccion]
 }
 
-// Leer
 export function getAll(coleccion) {
   return getCollection(load(), coleccion)
 }
@@ -67,7 +61,6 @@ export function getById(coleccion, id) {
   return getAll(coleccion).find((item) => item.id === Number(id)) ?? null
 }
 
-// Crear
 export function create(coleccion, item) {
   const data = load()
   const lista = getCollection(data, coleccion)
@@ -77,7 +70,6 @@ export function create(coleccion, item) {
   return nuevo
 }
 
-// Actualizar
 export function update(coleccion, id, cambios) {
   const data = load()
   const lista = getCollection(data, coleccion)
@@ -88,7 +80,6 @@ export function update(coleccion, id, cambios) {
   return lista[index]
 }
 
-// Eliminar
 export function remove(coleccion, id) {
   const data = load()
   const lista = getCollection(data, coleccion)
@@ -99,7 +90,6 @@ export function remove(coleccion, id) {
   return true
 }
 
-// Vuelve a los datos iniciales
 export function resetDB() {
   localStorage.removeItem(STORAGE_KEY)
   return load()

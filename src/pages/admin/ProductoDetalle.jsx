@@ -24,7 +24,6 @@ function ProductoDetalle() {
 
   if (!producto || !boletas) return <Estado error={error} />
 
-  // Ventas del producto según las boletas pagadas
   const vendidos = boletas
     .filter((o) => o.estado === 'PAGADA')
     .flatMap((o) => o.items)

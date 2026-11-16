@@ -30,8 +30,6 @@ function validar(form) {
   return errores
 }
 
-// Sirve para crear (/admin/productos/nuevo) y para editar (/admin/productos/:id/editar).
-// Primero carga el producto (si se edita) y las categorías; después muestra el formulario.
 function ProductoForm() {
   const { id } = useParams()
   const producto = useApi(id ? `/productos/${id}` : null)
@@ -50,7 +48,6 @@ function ProductoForm() {
 }
 
 function Formulario({ id, existente, categorias }) {
-  // Los inputs trabajan con texto, por eso se pasan los números a string
   const [form, setForm] = useState(() =>
     existente ? Object.fromEntries(Object.keys(VACIO).map((k) => [k, String(existente[k] ?? '')])) : VACIO,
   )

@@ -12,7 +12,6 @@ export default function Productos() {
   const { datos: todos, error } = useApi('/productos')
   if (!todos) return <Estado error={error} />
 
-  // Se filtra en el navegador para que la búsqueda responda al escribir sin una petición por tecla
   const productos = todos.filter((p) => {
     const coincideTexto = p.nombre.toLowerCase().includes(busqueda.toLowerCase())
     const coincideCategoria = categoriaId === '' || p.categoriaId === Number(categoriaId)

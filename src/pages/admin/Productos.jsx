@@ -5,8 +5,6 @@ import { useEsAdmin } from '../../context/sesion.js'
 import { formatearPrecio } from '../../utils/formato.js'
 import BotonEliminar from '../../components/BotonEliminar.jsx'
 
-// Con soloCriticos muestra solo los productos con stock <= stockCritico.
-// El vendedor solo los ve: no aparecen los botones de crear, editar ni eliminar.
 function Productos({ soloCriticos = false }) {
   const esAdmin = useEsAdmin()
   const [error, setError] = useState('')

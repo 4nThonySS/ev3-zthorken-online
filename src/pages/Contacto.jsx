@@ -16,7 +16,6 @@ function validar({ nombre, correo, mensaje }) {
 
 function Contacto() {
   const { usuario } = useSesion()
-  // Si hay sesión iniciada, el nombre y el correo se llenan solos
   const formInicial = {
     nombre: usuario ? `${usuario.nombre} ${usuario.apellidos}` : '',
     correo: usuario?.correo ?? '',

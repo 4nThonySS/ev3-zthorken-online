@@ -4,7 +4,6 @@ import Usuarios from './Usuarios.jsx'
 import { SesionProvider } from '../../context/SesionProvider.jsx'
 import { backend, iniciarSesion, instalarBackend, hasta } from '../../test/backendFalso.js'
 
-// Se renderiza con la sesión del admin (id 1) y espera a que carguen los usuarios
 async function renderUsuarios() {
   iniciarSesion('admin@zthorken.cl')
   render(

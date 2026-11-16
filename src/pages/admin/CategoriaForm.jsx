@@ -3,7 +3,6 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api, useApi, Estado } from '../../api.jsx'
 import { img } from '../../utils/formato.js'
 
-// El nombre repetido lo revisa el backend
 function validar(form) {
   const errores = {}
   const nombre = form.nombre.trim()
@@ -12,7 +11,6 @@ function validar(form) {
   return errores
 }
 
-// Sirve para crear (/admin/categorias/nueva) y para editar (/admin/categorias/:id/editar)
 function CategoriaForm() {
   const { id } = useParams()
   const { datos, error } = useApi(id ? `/categorias/${id}` : null)

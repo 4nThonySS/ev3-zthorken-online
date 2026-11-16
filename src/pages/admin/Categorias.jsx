@@ -10,7 +10,6 @@ function Categorias() {
   if (!categorias || !productos) return <Estado error={errorCarga} />
   const cantidad = (categoriaId) => productos.filter((p) => p.categoriaId === categoriaId).length
 
-  // El backend no deja eliminar una categoría con productos y responde con el motivo
   async function eliminar(c) {
     try {
       await api(`/categorias/${c.id}`, { method: 'DELETE' })

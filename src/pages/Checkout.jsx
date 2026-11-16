@@ -12,7 +12,6 @@ export default function Checkout() {
   const { usuario, actualizarPerfil } = useSesion()
   const navigate = useNavigate()
 
-  // Si hay sesión, el formulario parte con los datos del usuario
   const [datos, setDatos] = useState(() => ({
     nombre: usuario?.nombre ?? '',
     apellidos: usuario?.apellidos ?? '',
@@ -28,13 +27,10 @@ export default function Checkout() {
   const esAdmin = usuario?.rol === 'ADMIN'
   const [enviando, setEnviando] = useState(false)
 
-  // Un usuario con sesión puede guardar estos datos en su cuenta.
-  // Se ofrece solo si lo que escribió es distinto de lo que ya tiene guardado.
   const CAMPOS_PERFIL = ['nombre', 'apellidos', 'calle', 'departamento', 'region', 'comuna']
   const hayCambios = !!usuario && CAMPOS_PERFIL.some((c) => datos[c] !== (usuario[c] ?? ''))
   const sinDireccionGuardada = !!usuario && !usuario.calle
   const [guardarDatos, setGuardarDatos] = useState(null)
-  // Si la cuenta no tiene dirección, la casilla parte marcada
   const quiereGuardar = guardarDatos ?? sinDireccionGuardada
 
   const cambiar = (e) => setDatos({ ...datos, [e.target.name]: e.target.value })
@@ -67,7 +63,6 @@ export default function Checkout() {
       await actualizarPerfil({ nombre, apellidos, calle, departamento, region, comuna })
     }
     limpiar()
-    // La boleta va en el state: un invitado no puede volver a pedirla al backend
     navigate(`/pago-exitoso/${resultado.orden.id}`, { state: { orden: resultado.orden } })
   }
 

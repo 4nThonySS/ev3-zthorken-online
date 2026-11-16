@@ -38,7 +38,6 @@ describe('UsuarioDetalle', () => {
     const filas = screen.getAllByRole('row').slice(1)
     expect(filas.length).toBe(3)
     expect(filas[0].textContent).toContain('12 de octubre de 2026')
-    // La anulada no suma
     expect(screen.getByText('3 compra(s) por un total de $130.970.')).toBeTruthy()
     expect(backend.peticiones).toContain('GET /boletas?usuarioId=3')
   })

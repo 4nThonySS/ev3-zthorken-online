@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
-// slides: [{ titulo, texto, imagen, enlace, boton }]
 function Carrusel({ slides, intervalo = 5000 }) {
   const [actual, setActual] = useState(0)
   const total = slides.length
 
-  // Avanza solo; el temporizador se reinicia cada vez que cambia la diapositiva
   useEffect(() => {
     if (!intervalo || total < 2) return
     const id = setInterval(() => setActual((i) => (i + 1) % total), intervalo)

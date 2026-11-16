@@ -38,7 +38,6 @@ function Perfil() {
     setMensaje(null)
     if (Object.keys(nuevosErrores).length > 0) return
 
-    // La contraseña solo se cambia si se escribió una nueva
     const cambios = { nombre: form.nombre.trim(), apellidos: form.apellidos.trim(), correo: form.correo }
     if (form.password) cambios.password = form.password
 

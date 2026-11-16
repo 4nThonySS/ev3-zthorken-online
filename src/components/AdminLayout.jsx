@@ -1,7 +1,6 @@
 import { Link, NavLink, Navigate, Outlet } from 'react-router-dom'
 import { useSesion } from '../context/sesion.js'
 
-// soloAdmin: el vendedor no ve el enlace (y la ruta lo redirige, ver SoloAdmin)
 const enlaces = [
   { to: '/admin', texto: 'Dashboard', end: true, soloAdmin: true },
   { to: '/admin/ordenes', texto: 'Órdenes' },
@@ -12,16 +11,13 @@ const enlaces = [
   { to: '/admin/perfil', texto: 'Perfil' },
 ]
 
-// Envuelve las rutas que el vendedor no puede ver; lo manda a Órdenes
 export function SoloAdmin() {
   return useSesion().esAdmin ? <Outlet /> : <Navigate to="/admin/ordenes" replace />
 }
 
-// Layout del panel: sidebar + vista actual. Entran el admin y el vendedor.
 function AdminLayout() {
   const { usuario, esAdmin, esVendedor, logout } = useSesion()
 
-  // Al cerrar sesión este mismo guard lleva a /login
   if (!esAdmin && !esVendedor) return <Navigate to={usuario ? '/' : '/login'} replace />
 
   return (

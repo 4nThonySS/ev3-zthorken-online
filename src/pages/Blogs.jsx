@@ -3,7 +3,6 @@ import { getAll } from '../data/db.js'
 import { formatearFecha } from '../utils/formato.js'
 
 function Blogs() {
-  // Más recientes primero
   const blogs = [...getAll('blogs')].sort((a, b) => b.fecha.localeCompare(a.fecha))
 
   return (

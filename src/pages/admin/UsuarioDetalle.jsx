@@ -18,7 +18,6 @@ function UsuarioDetalle() {
 
   if (!usuario || !compras) return <Estado error={error} />
 
-  // Historial de compras (el backend las entrega de la más reciente a la más antigua); las anuladas no suman
   const totalGastado = compras.filter((o) => o.estado === 'PAGADA').reduce((suma, o) => suma + o.total, 0)
 
   const datos = [

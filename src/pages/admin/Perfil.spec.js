@@ -4,7 +4,6 @@ import Perfil from './Perfil.jsx'
 import { SesionProvider } from '../../context/SesionProvider.jsx'
 import { backend, iniciarSesion, instalarBackend } from '../../test/backendFalso.js'
 
-// Se renderiza con la sesión del admin (id 1)
 function renderPerfil() {
   iniciarSesion('admin@zthorken.cl')
   return render(

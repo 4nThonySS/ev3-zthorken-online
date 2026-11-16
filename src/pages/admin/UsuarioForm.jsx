@@ -17,7 +17,6 @@ const campos = [
   { name: 'comuna', label: 'Comuna (opcional)', type: 'text', col: 'col-md-6' },
 ]
 
-// Al editar, la contraseña vacía significa "no cambiarla". El correo repetido lo revisa el backend.
 function validar(form, id) {
   const errores = {}
   const correo = form.correo.trim().toLowerCase()
@@ -29,7 +28,6 @@ function validar(form, id) {
   return errores
 }
 
-// Sirve para crear (/admin/usuarios/nuevo) y para editar (/admin/usuarios/:id/editar)
 function UsuarioForm() {
   const { id } = useParams()
   const { datos, error } = useApi(id ? `/usuarios/${id}` : null)
@@ -47,7 +45,6 @@ function UsuarioForm() {
 }
 
 function Formulario({ id, existente }) {
-  // El backend no devuelve la contraseña; los campos vacíos llegan como null
   const [form, setForm] = useState(() =>
     existente ? { ...VACIO, ...Object.fromEntries(Object.entries(existente).map(([k, v]) => [k, v ?? ''])), password: '' } : VACIO,
   )
@@ -55,7 +52,6 @@ function Formulario({ id, existente }) {
   const [errorGuardar, setErrorGuardar] = useState('')
   const navigate = useNavigate()
   const { usuario: actual } = useSesion()
-  // El admin no puede quitarse su propio rol
   const esUnoMismo = existente?.id === actual?.id
 
   function cambiar(e) {

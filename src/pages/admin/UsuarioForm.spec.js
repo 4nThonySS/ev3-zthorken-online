@@ -4,7 +4,6 @@ import UsuarioForm from './UsuarioForm.jsx'
 import { SesionProvider } from '../../context/SesionProvider.jsx'
 import { backend, iniciarSesion, instalarBackend } from '../../test/backendFalso.js'
 
-// Se renderiza con la sesión del admin (id 1) y espera a que cargue el formulario
 async function renderForm(ruta = '/admin/usuarios/nuevo') {
   iniciarSesion('admin@zthorken.cl')
   render(

@@ -44,7 +44,6 @@ function App() {
         <Route path="/blogs" element={<Blogs />} />
         <Route path="/blogs/:id" element={<BlogDetalle />} />
         
-        {/* Persona 2: catálogo y compra */}
         <Route path="/productos" element={<Productos />} />
         <Route path="/productos/:id" element={<ProductoDetalle />} />
         <Route path="/categorias" element={<Categorias />} />
@@ -58,7 +57,6 @@ function App() {
       </Route>
 
       <Route path="/admin" element={<AdminLayout />}>
-        {/* Admin y vendedor: ver productos y órdenes con su detalle */}
         <Route path="productos" element={<AdminProductos />} />
         <Route path="productos/criticos" element={<AdminProductos soloCriticos />} />
         <Route path="productos/:id" element={<AdminProductoDetalle />} />
@@ -66,7 +64,6 @@ function App() {
         <Route path="ordenes/:id" element={<Boleta />} />
         <Route path="perfil" element={<Perfil />} />
 
-        {/* Solo admin */}
         <Route element={<SoloAdmin />}>
           <Route index element={<Dashboard />} />
           <Route path="productos/nuevo" element={<ProductoForm />} />

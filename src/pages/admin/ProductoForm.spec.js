@@ -3,7 +3,6 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import ProductoForm from './ProductoForm.jsx'
 import { backend, instalarBackend } from '../../test/backendFalso.js'
 
-// Monta el formulario y espera a que carguen las categorías (y el producto si se edita)
 async function renderForm(ruta = '/admin/productos/nuevo') {
   render(
     <MemoryRouter initialEntries={[ruta]}>

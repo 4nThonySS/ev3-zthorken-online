@@ -1,4 +1,3 @@
-// Pide confirmación antes de llamar a onEliminar
 function BotonEliminar({ nombre, onEliminar }) {
   function eliminar() {
     if (window.confirm(`¿Eliminar "${nombre}"?`)) onEliminar()

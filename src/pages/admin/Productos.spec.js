@@ -14,7 +14,6 @@ function renderProductos(props, rol = 'ADMIN') {
   )
 }
 
-// Filas del cuerpo de la tabla, cuando ya cargaron
 async function filas() {
   await screen.findByText('Audífonos HyperX Cloud II')
   return screen.getAllByRole('row').slice(1)

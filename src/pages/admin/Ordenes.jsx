@@ -3,7 +3,6 @@ import { useApi, Estado } from '../../api.jsx'
 import { formatearFecha, formatearPrecio } from '../../utils/formato.js'
 
 function Ordenes() {
-  // El backend las entrega de la más reciente a la más antigua
   const { datos: ordenes, error } = useApi('/boletas')
   if (!ordenes) return <Estado error={error} />
 

@@ -2,7 +2,6 @@ import { render, screen, fireEvent, act } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import Carrusel from './Carrusel.jsx'
 
-// Imagen vacía de 1x1 para que el navegador no busque archivos que no existen
 const IMAGEN = 'data:image/gif;base64,R0lGODlhAQABAAAAACw='
 
 const slides = [
@@ -15,7 +14,6 @@ function renderCarrusel(props) {
   return render(<MemoryRouter><Carrusel slides={slides} {...props} /></MemoryRouter>)
 }
 
-// La diapositiva visible es la que tiene la clase "active"
 function activa() {
   return document.querySelector('.carousel-item.active h2').textContent
 }
