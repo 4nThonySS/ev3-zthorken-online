@@ -1,23 +1,59 @@
-import { useState } from 'react'
-import { SesionContext } from './sesion.js'
-import { api, leerSesion, CLAVE_SESION } from '../api.jsx'
+import { useCallback, useEffect, useState } from 'react'
+import { SesionContext, MARGEN_RENOVACION_MS } from './sesion.js'
+import { api, leerSesion, CLAVE_SESION, EVENTO_SESION_EXPIRADA } from '../api.jsx'
 
-// La sesión ({ token, usuario }) viene del backend y se guarda en localStorage para no perderla al recargar
 export function SesionProvider({ children }) {
-  // ponytail: si el token vence (24 h) la sesión sigue en pantalla y el backend responde 401; basta con volver a entrar
   const [sesion, setSesion] = useState(leerSesion)
+  const [expirada, setExpirada] = useState(false)
   const usuario = sesion?.usuario ?? null
 
-  function guardar(nueva) {
+  const guardar = useCallback((nueva) => {
     if (nueva) localStorage.setItem(CLAVE_SESION, JSON.stringify(nueva))
     else localStorage.removeItem(CLAVE_SESION)
     setSesion(nueva)
-  }
+  }, [])
 
-  // Todas devuelven { ok: true } o { ok: false, error: 'mensaje' }
+  useEffect(() => {
+    function alExpirar() {
+      setSesion(null)
+      setExpirada(true)
+    }
+    function alCambiarEnOtraPestana(e) {
+      if (e.key === CLAVE_SESION || e.key === null) setSesion(leerSesion())
+    }
+    window.addEventListener(EVENTO_SESION_EXPIRADA, alExpirar)
+    window.addEventListener('storage', alCambiarEnOtraPestana)
+    return () => {
+      window.removeEventListener(EVENTO_SESION_EXPIRADA, alExpirar)
+      window.removeEventListener('storage', alCambiarEnOtraPestana)
+    }
+  }, [])
+
+  const token = sesion?.token
+  const expiraEn = sesion?.expiraEn
+  useEffect(() => {
+    if (!token || !expiraEn) return
+    const espera = Math.max(expiraEn - Date.now() - MARGEN_RENOVACION_MS, 0)
+    const renovar = setTimeout(() => {
+      api('/auth/refresh', { method: 'POST' })
+        .then(guardar)
+        .catch(() => {})
+    }, espera)
+    const vencer = setTimeout(() => {
+      localStorage.removeItem(CLAVE_SESION)
+      setSesion(null)
+      setExpirada(true)
+    }, Math.max(expiraEn - Date.now(), 0))
+    return () => {
+      clearTimeout(renovar)
+      clearTimeout(vencer)
+    }
+  }, [token, expiraEn, guardar])
+
   async function intentar(accion) {
     try {
       await accion()
+      setExpirada(false)
       return { ok: true }
     } catch (e) {
       return { ok: false, error: e.message }
@@ -27,21 +63,23 @@ export function SesionProvider({ children }) {
   const login = (correo, password) =>
     intentar(async () => guardar(await api('/auth/login', { method: 'POST', body: { correo, password } })))
 
-  // El backend crea siempre un CLIENTE y devuelve su token
   const registrar = (datos) =>
     intentar(async () => guardar(await api('/auth/register', { method: 'POST', body: datos })))
 
-  // Se manda el perfil completo: lo que no viene en cambios se mantiene
   const actualizarPerfil = (cambios) =>
     intentar(async () => {
       const actualizado = await api('/auth/perfil', { method: 'PUT', body: { ...usuario, ...cambios } })
       guardar({ ...sesion, usuario: actualizado })
     })
 
-  const logout = () => guardar(null)
+  const logout = () => {
+    setExpirada(false)
+    guardar(null)
+  }
 
   const valor = {
     usuario,
+    expirada,
     esAdmin: usuario?.rol === 'ADMIN',
     esVendedor: usuario?.rol === 'VENDEDOR',
     login,

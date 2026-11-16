@@ -1,10 +1,3 @@
-// Backend falso para los tests: reemplaza window.fetch y responde como la API real (/api/v1),
-// con los mismos datos iniciales que carga el backend. No revisa permisos: eso se prueba en el backend.
-//
-// Uso en un spec:
-//   beforeEach(() => instalarBackend())
-//   ...
-//   expect(backend.productos.length).toBe(11)   // los datos quedan en `backend` para revisarlos
 import { waitFor } from '@testing-library/react'
 import { API_URL } from '../api.jsx'
 
@@ -54,7 +47,6 @@ const BOLETAS = [
   },
 ]
 
-// Estado actual del backend falso (se reinicia con instalarBackend)
 export const backend = { categorias: [], productos: [], usuarios: [], boletas: [], peticiones: [] }
 
 class ErrorApi extends Error {
@@ -114,22 +106,28 @@ function crearBoleta({ cliente, direccion, items }) {
   return boleta
 }
 
-// [método, ruta con :id, función(id, body, query)]
+const DIA_MS = 24 * 60 * 60 * 1000
+
 const RUTAS = [
   ['POST', '/auth/login', (_, { correo, password }) => {
     const u = backend.usuarios.find((x) => x.correo === correo.trim().toLowerCase() && x.password === password)
     if (!u) throw new ErrorApi(401, 'Correo o contraseña incorrectos')
-    return { token: `token-${u.id}`, usuario: sinPassword(u) }
+    return { token: `token-${u.id}`, expiraEn: DIA_MS + Date.now(), usuario: sinPassword(u) }
   }],
   ['POST', '/auth/register', (_, datos) => {
     const u = { id: siguienteId(backend.usuarios) }
     backend.usuarios.push(u)
     try {
-      return { token: `token-${u.id}`, usuario: guardarUsuario(u, { ...datos, rol: 'CLIENTE' }) }
+      return { token: `token-${u.id}`, expiraEn: DIA_MS + Date.now(), usuario: guardarUsuario(u, { ...datos, rol: 'CLIENTE' }) }
     } catch (e) {
       backend.usuarios.pop()
       throw e
     }
+  }],
+  ['POST', '/auth/refresh', () => {
+    if (!backend.sesionId) throw new ErrorApi(401, 'No autenticado')
+    const u = buscar(backend.usuarios, backend.sesionId, 'Usuario')
+    return { token: `token-${u.id}-renovado`, expiraEn: DIA_MS + Date.now(), usuario: sinPassword(u) }
   }],
   ['PUT', '/auth/perfil', (_, datos) => {
     const u = buscar(backend.usuarios, backend.sesionId, 'Usuario')
@@ -202,8 +200,11 @@ function atender(url, opciones = {}) {
   const { pathname, searchParams } = new URL(url)
   const ruta = pathname.slice(new URL(API_URL).pathname.length)
   const body = opciones.body ? JSON.parse(opciones.body) : undefined
-  // El token falso es "token-<id del usuario>"
   backend.sesionId = Number(opciones.headers?.Authorization?.split('-')[1]) || null
+  if (backend.tokensRechazados && opciones.headers?.Authorization) {
+    backend.peticiones.push(`${metodo} ${ruta}`)
+    return respuesta(401, null)
+  }
   backend.peticiones.push(`${metodo} ${ruta}${searchParams.size ? '?' + searchParams : ''}`)
 
   for (const [m, patron, accion] of RUTAS) {
@@ -223,31 +224,31 @@ function atender(url, opciones = {}) {
   return respuesta(404, { status: 404, mensaje: `Ruta ${metodo} ${ruta} no existe en el backend falso` })
 }
 
-// Reinicia los datos, limpia la sesión guardada y reemplaza fetch. Llamar en beforeEach.
 export function instalarBackend() {
   backend.categorias = structuredClone(CATEGORIAS)
   backend.productos = structuredClone(PRODUCTOS)
   backend.usuarios = structuredClone(USUARIOS)
   backend.boletas = structuredClone(BOLETAS)
   backend.peticiones = []
+  backend.tokensRechazados = false
   localStorage.removeItem('zthorken-sesion')
   spyOn(window, 'fetch').and.callFake(atender)
 }
 
-// Simula que el backend está caído
 export function backendCaido() {
   window.fetch.and.callFake(() => Promise.reject(new TypeError('Failed to fetch')))
 }
 
-// Deja guardada una sesión, como si el usuario hubiera hecho login
-export function iniciarSesion(correo) {
+export function iniciarSesion(correo, expiraEn = Date.now() + DIA_MS) {
   const u = backend.usuarios.find((x) => x.correo === correo)
-  localStorage.setItem('zthorken-sesion', JSON.stringify({ token: `token-${u.id}`, usuario: sinPassword(u) }))
+  localStorage.setItem('zthorken-sesion', JSON.stringify({ token: `token-${u.id}`, expiraEn, usuario: sinPassword(u) }))
   return sinPassword(u)
 }
 
-// Espera hasta que la condición sea verdadera. Con Jasmine, waitFor(() => expect(...)) no sirve:
-// expect no lanza error al fallar, así que waitFor terminaría en el primer intento.
+export function rechazarTokens() {
+  backend.tokensRechazados = true
+}
+
 export function hasta(condicion) {
   return waitFor(() => {
     if (!condicion()) throw new Error('La condición no se cumplió a tiempo')

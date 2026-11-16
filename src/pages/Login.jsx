@@ -15,7 +15,7 @@ function Login() {
   const [form, setForm] = useState({ correo: '', password: '' })
   const [errores, setErrores] = useState({})
   const [errorLogin, setErrorLogin] = useState('')
-  const { usuario, login } = useSesion()
+  const { usuario, expirada, login } = useSesion()
   const navigate = useNavigate()
 
   if (usuario) return <Navigate to="/" replace />
@@ -44,6 +44,9 @@ function Login() {
             <div className="card-body p-4">
               <h1 className="h3 mb-4 text-center">Iniciar sesión</h1>
 
+              {expirada && !errorLogin && (
+                <div className="alert alert-warning" role="status">Tu sesión expiró. Vuelve a iniciar sesión.</div>
+              )}
               {errorLogin && <div className="alert alert-danger" role="alert">{errorLogin}</div>}
 
               <form onSubmit={enviar} noValidate>

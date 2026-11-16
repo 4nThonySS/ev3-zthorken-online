@@ -1,21 +1,30 @@
 import { useCallback, useEffect, useState } from 'react'
 
-// URL del backend; se cambia con VITE_API_URL en un archivo .env
 export const API_URL = import.meta.env?.VITE_API_URL ?? 'http://localhost:8080/api/v1'
 
-// La sesión ({ token, usuario }) se guarda aquí para mandar el token en cada petición
 export const CLAVE_SESION = 'zthorken-sesion'
 
+export const EVENTO_SESION_EXPIRADA = 'zthorken-sesion-expirada'
+
 export function leerSesion() {
+  let sesion
   try {
-    return JSON.parse(localStorage.getItem(CLAVE_SESION))
+    sesion = JSON.parse(localStorage.getItem(CLAVE_SESION))
   } catch {
+    sesion = null
+  }
+  if (!sesion?.token || (sesion.expiraEn && sesion.expiraEn <= Date.now())) {
+    localStorage.removeItem(CLAVE_SESION)
     return null
   }
+  return sesion
 }
 
-// Llama al backend y devuelve el JSON. Si responde con error lanza un Error con el mensaje del backend
-// (y los errores por campo en error.campos, si los hay).
+function cerrarSesionExpirada() {
+  localStorage.removeItem(CLAVE_SESION)
+  window.dispatchEvent(new Event(EVENTO_SESION_EXPIRADA))
+}
+
 export async function api(ruta, { method = 'GET', body } = {}) {
   const headers = {}
   if (body !== undefined) headers['Content-Type'] = 'application/json'
@@ -30,6 +39,10 @@ export async function api(ruta, { method = 'GET', body } = {}) {
   }
 
   const datos = respuesta.status === 204 ? null : await respuesta.json().catch(() => null)
+  if (respuesta.status === 401 && token) {
+    cerrarSesionExpirada()
+    throw Object.assign(new Error('Tu sesión expiró. Vuelve a iniciar sesión'), { status: 401, campos: {} })
+  }
   if (!respuesta.ok) {
     const error = new Error(datos?.mensaje ?? mensajePorEstado(respuesta.status))
     error.status = respuesta.status
@@ -45,8 +58,6 @@ function mensajePorEstado(status) {
   return 'Ocurrió un error en el servidor'
 }
 
-// Carga una ruta al montar el componente: const { datos, error, recargar } = useApi('/productos')
-// datos es null mientras carga. Con ruta null no hace nada (útil si la ruta depende de otro dato).
 export function useApi(ruta) {
   const [estado, setEstado] = useState({ ruta: null, datos: null, error: null })
 
@@ -59,12 +70,10 @@ export function useApi(ruta) {
 
   useEffect(recargar, [recargar])
 
-  // Si cambió la ruta, los datos anteriores ya no sirven
   const vigente = estado.ruta === ruta
   return { datos: vigente ? estado.datos : null, error: vigente ? estado.error : null, recargar }
 }
 
-// Muestra "Cargando..." o el error mientras no hay datos. Uso: if (!datos) return <Estado error={error} />
 export function Estado({ error }) {
   if (error) return <div className="alert alert-danger m-3" role="alert">{error.message}</div>
   return <p className="text-muted m-3">Cargando...</p>

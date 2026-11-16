@@ -1,13 +1,14 @@
 import { renderHook, act } from '@testing-library/react'
 import { SesionProvider } from './SesionProvider.jsx'
+import { MARGEN_RENOVACION_MS } from './sesion.js'
 import { useSesion } from './sesion.js'
-import { backend, instalarBackend } from '../test/backendFalso.js'
+import { api } from '../api.jsx'
+import { backend, instalarBackend, iniciarSesion, rechazarTokens, hasta } from '../test/backendFalso.js'
 
 function renderSesion() {
   return renderHook(() => useSesion(), { wrapper: SesionProvider })
 }
 
-// Ejecuta una acción async de la sesión y devuelve su respuesta
 async function hacer(accion) {
   let respuesta
   await act(async () => { respuesta = await accion() })
@@ -100,5 +101,57 @@ describe('SesionProvider', () => {
     const respuesta = await hacer(() => result.current.actualizarPerfil({ correo: 'admin@zthorken.cl' }))
     expect(respuesta).toEqual({ ok: false, error: 'Ya existe un usuario con el correo admin@zthorken.cl' })
     expect(result.current.usuario.correo).toBe('pedro@correo.cl')
+  })
+  it('guarda cuándo vence el token', async () => {
+    const { result } = renderSesion()
+    await hacer(() => result.current.login('pedro@correo.cl', 'pedro123'))
+    expect(JSON.parse(localStorage.getItem('zthorken-sesion')).expiraEn).toBeGreaterThan(Date.now())
+  })
+
+  it('descarta al recargar una sesión cuyo token ya venció', () => {
+    iniciarSesion('pedro@correo.cl', Date.now() - 1000)
+    const { result } = renderSesion()
+    expect(result.current.usuario).toBeNull()
+    expect(localStorage.getItem('zthorken-sesion')).toBeNull()
+  })
+
+  it('cierra la sesión y avisa cuando el backend rechaza el token', async () => {
+    iniciarSesion('admin@zthorken.cl')
+    const { result } = renderSesion()
+    expect(result.current.esAdmin).toBeTrue()
+    rechazarTokens()
+    let error
+    await act(async () => { await api('/usuarios').catch((e) => { error = e }) })
+    expect(error.status).toBe(401)
+    expect(error.message).toBe('Tu sesión expiró. Vuelve a iniciar sesión')
+    expect(result.current.usuario).toBeNull()
+    expect(result.current.expirada).toBeTrue()
+    expect(localStorage.getItem('zthorken-sesion')).toBeNull()
+  })
+
+  it('renueva el token antes de que venza', async () => {
+    iniciarSesion('vendedor@zthorken.cl', Date.now() + MARGEN_RENOVACION_MS - 1000)
+    const { result } = renderSesion()
+    await hasta(() => backend.peticiones.includes('POST /auth/refresh'))
+    await hasta(() => JSON.parse(localStorage.getItem('zthorken-sesion'))?.token === 'token-2-renovado')
+    expect(result.current.esVendedor).toBeTrue()
+  })
+
+  it('si la renovación es rechazada la sesión se cierra', async () => {
+    iniciarSesion('vendedor@zthorken.cl', Date.now() + MARGEN_RENOVACION_MS - 1000)
+    rechazarTokens()
+    const { result } = renderSesion()
+    await hasta(() => result.current.usuario === null)
+    expect(result.current.expirada).toBeTrue()
+  })
+
+  it('refleja el login o logout hecho en otra pestaña', () => {
+    const { result } = renderSesion()
+    iniciarSesion('pedro@correo.cl')
+    act(() => window.dispatchEvent(new StorageEvent('storage', { key: 'zthorken-sesion' })))
+    expect(result.current.usuario.correo).toBe('pedro@correo.cl')
+    localStorage.removeItem('zthorken-sesion')
+    act(() => window.dispatchEvent(new StorageEvent('storage', { key: 'zthorken-sesion' })))
+    expect(result.current.usuario).toBeNull()
   })
 })
