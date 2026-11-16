@@ -8,12 +8,10 @@ async function renderReportes() {
   await screen.findByRole('heading', { name: 'Órdenes' })
 }
 
-// Valor de una tarjeta del resumen
 function resumen(titulo) {
   return screen.getByRole('heading', { name: titulo }).nextElementSibling.textContent
 }
 
-// Celdas de la fila de una categoría en el reporte por categoría
 function filaCategoria(nombre) {
   const tabla = screen.getByRole('table', { name: 'Reporte por categoría' })
   return [...within(tabla).getByText(nombre).closest('tr').children].map((td) => td.textContent)
@@ -51,7 +49,6 @@ describe('Reportes', () => {
 
   it('calcula inventario y ventas por categoría', async () => {
     await renderReportes()
-    // Periféricos: teclado (25 x 34.990) y mouse (4 x 49.990, crítico); se vendieron 2 teclados
     expect(filaCategoria('Periféricos')).toEqual(['Periféricos', '2', '29', '$1.074.710', '1', '2', '$69.980'])
   })
 
@@ -69,5 +66,26 @@ describe('Reportes', () => {
     await renderReportes()
     expect(screen.getByText('Todavía no hay ventas.')).toBeTruthy()
     expect(resumen('Ticket promedio')).toBe('$0')
+  })
+
+  it('grafica las ventas por categoría de mayor a menor', async () => {
+    await renderReportes()
+    const filas = within(screen.getByRole('list', { name: 'Ventas por categoría' })).getAllByRole('listitem')
+    expect(filas.length).toBe(backend.categorias.length)
+    expect(filas[0].textContent).toContain('Periféricos')
+    expect(filas[0].textContent).toContain('$69.980')
+  })
+
+  it('grafica los productos más vendidos y el valor del inventario', async () => {
+    await renderReportes()
+    const top = within(screen.getByRole('list', { name: 'Top 5 productos más vendidos' })).getAllByRole('listitem')
+    expect(top[0].textContent).toContain('Teclado Mecánico Redragon Kumara')
+    expect(screen.getByRole('list', { name: 'Valor del inventario por categoría' })).toBeTruthy()
+  })
+
+  it('grafica las órdenes pagadas y anuladas', async () => {
+    backend.boletas.push(boleta('ANULADA'))
+    await renderReportes()
+    expect(screen.getByRole('img', { name: 'Pagadas: 1, Anuladas: 1' })).toBeTruthy()
   })
 })

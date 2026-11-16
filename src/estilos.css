@@ -1,4 +1,3 @@
-/* Colores y tipografías del header y footer */
 :root {
   --zt-azul: #0b1f33;
   --zt-azul-claro: #16314d;
@@ -32,7 +31,6 @@ body {
   background: var(--zt-acento);
 }
 
-/* Header */
 .zt-header {
   background: var(--zt-azul);
 }
@@ -46,7 +44,6 @@ body {
   color: #fff;
 }
 
-/* La página actual se marca con una línea naranja abajo */
 @media (min-width: 1200px) {
   .zt-header .navbar {
     padding-block: 0;
@@ -136,7 +133,6 @@ body {
   filter: brightness(1.08);
 }
 
-/* Footer */
 .zt-footer {
   background: var(--zt-azul);
   color: var(--zt-texto-suave);
@@ -164,7 +160,6 @@ body {
   color: #8fa3b8;
 }
 
-/* Campos de formulario más visibles (borde y fondo) */
 .form-control,
 .form-select {
   background-color: #f4f6f9;
@@ -186,8 +181,210 @@ body {
 .form-check-input {
   border: 1.5px solid #5f6b78;
 }
-/* Mantiene el rojo de Bootstrap cuando el campo tiene error */
 .form-control.is-invalid,
 .form-select.is-invalid {
   border-color: #dc3545;
+}
+.grafico {
+  --serie-1: #2a78d6;
+  --serie-2: #eb6834;
+  --grafico-grilla: #e6e5e0;
+  --grafico-pista: #f3f2ef;
+  --grafico-texto: #52514e;
+  --grafico-superficie: #fff;
+}
+
+.grafico .serie-1 {
+  background: var(--serie-1);
+}
+
+.grafico .serie-2 {
+  background: var(--serie-2);
+}
+
+.grafico-barras {
+  display: grid;
+  gap: 8px;
+}
+
+.grafico-fila {
+  display: grid;
+  grid-template-columns: minmax(90px, 38%) 1fr;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.85rem;
+  border-radius: 4px;
+  outline: none;
+}
+
+.grafico-fila:focus-visible,
+.grafico-columna:focus-visible {
+  box-shadow: 0 0 0 2px var(--serie-1);
+}
+
+.grafico-etiqueta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--grafico-texto);
+}
+
+.grafico-pista {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 20px;
+}
+
+.grafico-barra {
+  display: block;
+  height: 14px;
+  min-width: 2px;
+  max-width: calc(100% - 90px);
+  background: var(--serie-1);
+  border-radius: 0 4px 4px 0;
+  transition: opacity 0.15s;
+}
+
+.grafico-valor {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.grafico-barras:hover .grafico-fila:not(.activa) .grafico-barra,
+.grafico-plot:hover .grafico-columna:not(.activa) .grafico-columna-barra {
+  opacity: 0.45;
+}
+
+.grafico-tooltip {
+  position: absolute;
+  z-index: 5;
+  left: 0;
+  bottom: calc(100% + 6px);
+  display: flex;
+  flex-direction: column;
+  min-width: 140px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  background: var(--grafico-superficie);
+  border: 1px solid var(--grafico-grilla);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.grafico-columnas {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 8px;
+}
+
+.grafico-eje {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 180px;
+  margin: -0.5em 0;
+  font-size: 0.75rem;
+  color: var(--grafico-texto);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.grafico-area {
+  position: relative;
+  height: 180px;
+}
+
+.grafico-grilla {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px solid var(--grafico-grilla);
+}
+
+.grafico-plot {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  gap: 2px;
+}
+
+.grafico-columna {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  border-radius: 4px;
+  outline: none;
+  cursor: default;
+}
+
+.grafico-columna-barra {
+  display: block;
+  width: min(24px, 70%);
+  background: var(--serie-1);
+  border-radius: 4px 4px 0 0;
+  transition: opacity 0.15s;
+}
+
+.grafico-columna .grafico-tooltip {
+  left: 50%;
+  bottom: auto;
+  top: 0;
+  transform: translate(-50%, -100%);
+}
+
+.grafico-etiquetas-x {
+  display: flex;
+  gap: 2px;
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: var(--grafico-texto);
+}
+
+.grafico-etiquetas-x span {
+  flex: 1;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.grafico-segmentos {
+  display: flex;
+  gap: 2px;
+  height: 12px;
+}
+
+.grafico-segmento {
+  display: block;
+  min-width: 4px;
+  border-radius: 6px;
+}
+
+.grafico-leyenda {
+  display: grid;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+
+.grafico-leyenda li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.grafico-muestra {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.grafico-pct {
+  width: 3em;
+  text-align: right;
 }

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import Dashboard from './Dashboard.jsx'
 import { backend, instalarBackend } from '../../test/backendFalso.js'
@@ -37,5 +37,18 @@ describe('Dashboard', () => {
     renderDashboard()
     expect((await screen.findByRole('link', { name: 'Nuevo producto' })).getAttribute('href')).toBe('/admin/productos/nuevo')
     expect(screen.getByRole('link', { name: 'Productos críticos' }).getAttribute('href')).toBe('/admin/productos/criticos')
+  })
+
+  it('grafica las ventas de los últimos 6 meses', async () => {
+    renderDashboard()
+    const meses = within(await screen.findByRole('list', { name: 'Ventas por mes' })).getAllByRole('listitem')
+    expect(meses.length).toBe(6)
+  })
+
+  it('grafica los productos con menos stock y marca los críticos', async () => {
+    renderDashboard()
+    const filas = within(await screen.findByRole('list', { name: 'Productos con menos stock' })).getAllByRole('listitem')
+    expect(filas.length).toBe(6)
+    expect(within(filas[0]).getByText('Crítico')).toBeTruthy()
   })
 })

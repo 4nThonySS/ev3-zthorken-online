@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useApi, Estado } from '../../api.jsx'
-import { formatearPrecio } from '../../utils/formato.js'
+import { formatearPrecio, formatearPrecioCorto, ultimosMeses } from '../../utils/formato.js'
+import { GraficoBarras, GraficoColumnas } from '../../components/Graficos.jsx'
 
 const accesos = [
   { to: '/admin/productos/nuevo', texto: 'Nuevo producto' },
@@ -16,8 +17,28 @@ function Dashboard() {
   const usuarios = useApi('/usuarios').datos
   if (!boletas.datos || !productos || !usuarios) return <Estado error={boletas.error} />
 
-  // Las boletas anuladas no cuentan como venta
   const ordenes = boletas.datos.filter((o) => o.estado === 'PAGADA')
+
+  const ventasPorMes = ultimosMeses(6).map(({ clave, etiqueta }) => {
+    const delMes = ordenes.filter((o) => o.fecha?.startsWith(clave))
+    return {
+      id: clave,
+      etiqueta,
+      valor: delMes.reduce((suma, o) => suma + o.total, 0),
+      detalle: `${delMes.length} ${delMes.length === 1 ? 'orden' : 'órdenes'}`,
+    }
+  })
+
+  const menorStock = [...productos]
+    .sort((a, b) => a.stock - b.stock)
+    .slice(0, 6)
+    .map((p) => ({
+      id: p.id,
+      nombre: p.nombre,
+      valor: p.stock,
+      marca: p.stock <= p.stockCritico ? 'Crítico' : null,
+      detalle: `Stock crítico: ${p.stockCritico}`,
+    }))
 
   const tarjetas = [
     {
@@ -57,6 +78,26 @@ function Dashboard() {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="row g-3 mb-4">
+        <div className="col-lg-7">
+          <GraficoColumnas
+            titulo="Ventas por mes"
+            descripcion="Monto de las órdenes pagadas en los últimos 6 meses"
+            datos={ventasPorMes}
+            formato={formatearPrecio}
+            formatoEje={formatearPrecioCorto}
+          />
+        </div>
+        <div className="col-lg-5">
+          <GraficoBarras
+            titulo="Productos con menos stock"
+            descripcion="Unidades disponibles; los marcados están en stock crítico"
+            datos={menorStock}
+            formato={(v) => `${v} u.`}
+          />
+        </div>
       </div>
 
       <h2 className="h5">Accesos directos</h2>

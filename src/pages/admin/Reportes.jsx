@@ -1,5 +1,8 @@
 import { useApi, Estado } from '../../api.jsx'
 import { formatearPrecio } from '../../utils/formato.js'
+import { BarraSegmentada, GraficoBarras } from '../../components/Graficos.jsx'
+
+const porMayor = (a, b) => b.valor - a.valor
 
 function Reportes() {
   const boletas = useApi('/boletas')
@@ -7,10 +10,8 @@ function Reportes() {
   const categorias = useApi('/categorias').datos
   if (!boletas.datos || !productos || !categorias) return <Estado error={boletas.error} />
 
-  // Las boletas anuladas no cuentan como venta
   const ordenes = boletas.datos.filter((o) => o.estado === 'PAGADA')
 
-  // Unidades y monto vendidos de cada producto, según las órdenes
   const ventas = {}
   for (const o of ordenes) {
     for (const i of o.items) {
@@ -31,7 +32,6 @@ function Reportes() {
     { titulo: 'Unidades vendidas', valor: unidadesVendidas },
   ]
 
-  // Las ventas de productos ya eliminados no se cuentan en su categoría
   const porCategoria = categorias.map((c) => {
     const lista = productos.filter((p) => p.categoriaId === c.id)
     return {
@@ -44,6 +44,19 @@ function Reportes() {
       monto: lista.reduce((suma, p) => suma + (ventas[p.id]?.monto ?? 0), 0),
     }
   })
+
+  const graficoVentas = porCategoria
+    .map((c) => ({ id: c.id, nombre: c.nombre, valor: c.monto, detalle: `${c.unidades} unidades vendidas` }))
+    .sort(porMayor)
+  const graficoMasVendidos = masVendidos
+    .map((v) => ({ nombre: v.nombre, valor: v.unidades, detalle: formatearPrecio(v.monto) }))
+  const graficoStock = porCategoria
+    .map((c) => ({ id: c.id, nombre: c.nombre, valor: c.valorStock, detalle: `${c.stock} unidades en ${c.productos} productos` }))
+    .sort(porMayor)
+  const estados = [
+    { nombre: 'Pagadas', valor: ordenes.length },
+    { nombre: 'Anuladas', valor: boletas.datos.filter((o) => o.estado === 'ANULADA').length },
+  ]
 
   return (
     <>
@@ -60,6 +73,43 @@ function Reportes() {
             </div>
           </div>
         ))}
+      </div>
+
+      <h2 className="h5">Gráficos</h2>
+      <div className="row g-3 mb-4">
+        <div className="col-lg-6">
+          <GraficoBarras
+            titulo="Ventas por categoría"
+            descripcion="Monto vendido en órdenes pagadas"
+            datos={graficoVentas}
+            formato={formatearPrecio}
+            vacio="Sin ventas registradas."
+          />
+        </div>
+        <div className="col-lg-6">
+          <GraficoBarras
+            titulo="Top 5 productos más vendidos"
+            descripcion="Unidades vendidas en órdenes pagadas"
+            datos={graficoMasVendidos}
+            formato={(v) => `${v} u.`}
+            vacio="Sin ventas registradas."
+          />
+        </div>
+        <div className="col-lg-6">
+          <GraficoBarras
+            titulo="Valor del inventario por categoría"
+            descripcion="Precio normal por unidades en stock"
+            datos={graficoStock}
+            formato={formatearPrecio}
+          />
+        </div>
+        <div className="col-lg-6">
+          <BarraSegmentada
+            titulo="Órdenes por estado"
+            descripcion="Pagadas frente a anuladas"
+            partes={estados}
+          />
+        </div>
       </div>
 
       <h2 className="h5">Por categoría</h2>

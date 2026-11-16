@@ -1,5 +1,3 @@
-// '2026-10-05' o '2026-10-05T14:30:00' (backend) -> '5 de octubre de 2026'
-// Se usa la hora local 00:00 para que la fecha no se corra un día por la zona horaria
 export function formatearFecha(fecha) {
   return new Date(`${fecha.slice(0, 10)}T00:00:00`).toLocaleDateString('es-CL', {
     day: 'numeric',
@@ -8,10 +6,23 @@ export function formatearFecha(fecha) {
   })
 }
 
-// 129970 -> '$129.970'
 export function formatearPrecio(valor) {
   return `$${valor.toLocaleString('es-CL')}`
 }
 
-// Imagen provisoria para productos y categorías nuevos sin foto
+export function formatearPrecioCorto(valor) {
+  if (valor >= 1000000) return `$${(valor / 1000000).toLocaleString('es-CL', { maximumFractionDigits: 1 })} M`
+  if (valor >= 1000) return `$${Math.round(valor / 1000).toLocaleString('es-CL')} mil`
+  return formatearPrecio(valor)
+}
+
+export function ultimosMeses(cantidad, hoy = new Date()) {
+  return Array.from({ length: cantidad }, (_, i) => {
+    const fecha = new Date(hoy.getFullYear(), hoy.getMonth() - (cantidad - 1 - i), 1)
+    const clave = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`
+    const mes = fecha.toLocaleDateString('es-CL', { month: 'short' }).replace('.', '')
+    return { clave, etiqueta: `${mes} ${String(fecha.getFullYear()).slice(2)}` }
+  })
+}
+
 export const img = (texto) => `https://placehold.co/400x300?text=${encodeURIComponent(texto)}`
