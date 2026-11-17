@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, within } from '@testing-library/react'
-import { BarraSegmentada, GraficoBarras, GraficoColumnas } from './Graficos.jsx'
+import { GraficoBarras, GraficoDona, GraficoLineas } from './Graficos.jsx'
 import { formatearPrecioCorto, ultimosMeses } from '../utils/formato.js'
 
 const datos = [
@@ -41,44 +41,73 @@ describe('GraficoBarras', () => {
   })
 })
 
-describe('GraficoColumnas', () => {
+describe('GraficoLineas', () => {
   const meses = [
     { etiqueta: 'oct 26', valor: 150000, detalle: '1 orden' },
     { etiqueta: 'nov 26', valor: 0 },
   ]
 
-  it('escala las columnas a un máximo redondo y rotula el eje', () => {
-    render(<GraficoColumnas titulo="Ventas" datos={meses} formatoEje={formatearPrecioCorto} />)
-    const columnas = within(screen.getByRole('list', { name: 'Ventas' })).getAllByRole('listitem')
-    expect(columnas[0].querySelector('.grafico-columna-barra').style.height).toBe('75%')
-    expect(columnas[1].querySelector('.grafico-columna-barra').style.height).toBe('0%')
+  it('ubica cada punto según un máximo redondo y rotula el eje', () => {
+    render(<GraficoLineas titulo="Ventas" datos={meses} formatoEje={formatearPrecioCorto} />)
+    const puntos = within(screen.getByRole('list', { name: 'Ventas' })).getAllByRole('listitem')
+    expect(puntos.length).toBe(2)
+    expect(puntos[0].style.top).toBe('25%')
+    expect(puntos[0].style.left).toBe('0%')
+    expect(puntos[1].style.top).toBe('100%')
+    expect(puntos[1].style.left).toBe('100%')
     expect(screen.getByText('$200 mil')).toBeTruthy()
   })
 
+  it('dibuja la línea y el área bajo ella', () => {
+    const { container } = render(<GraficoLineas titulo="Ventas" datos={meses} />)
+    expect(container.querySelector('.grafico-trazo').getAttribute('d')).toBe('M0,50 L600,200')
+    expect(container.querySelector('.grafico-relleno').getAttribute('d')).toContain('Z')
+  })
+
   it('muestra el valor del mes en el tooltip', () => {
-    render(<GraficoColumnas titulo="Ventas" datos={meses} formato={(v) => `$${v}`} />)
+    render(<GraficoLineas titulo="Ventas" datos={meses} formato={(v) => `$${v}`} />)
     fireEvent.mouseEnter(screen.getByLabelText('oct 26: $150000'))
     expect(screen.getByRole('tooltip').textContent).toBe('oct 26$1500001 orden')
   })
 })
 
-describe('BarraSegmentada', () => {
+describe('GraficoDona', () => {
   it('muestra la leyenda con cantidades y porcentajes', () => {
-    render(<BarraSegmentada titulo="Estados" partes={[{ nombre: 'Pagadas', valor: 3 }, { nombre: 'Anuladas', valor: 1 }]} />)
+    render(<GraficoDona titulo="Estados" datos={[{ nombre: 'Pagadas', valor: 3 }, { nombre: 'Anuladas', valor: 1 }]} />)
     expect(screen.getByRole('img').getAttribute('aria-label')).toBe('Pagadas: 3, Anuladas: 1')
+    expect(within(screen.getByRole('list', { name: 'Estados' })).getAllByRole('listitem').length).toBe(2)
     expect(screen.getByText('75%')).toBeTruthy()
     expect(screen.getByText('25%')).toBeTruthy()
   })
 
-  it('mantiene el color de cada estado aunque otro tenga cero', () => {
-    const { container } = render(<BarraSegmentada titulo="Estados" partes={[{ nombre: 'Pagadas', valor: 0 }, { nombre: 'Anuladas', valor: 2 }]} />)
-    const segmentos = container.querySelectorAll('.grafico-segmento')
-    expect(segmentos.length).toBe(1)
-    expect(segmentos[0].classList).toContain('serie-2')
+  it('muestra el total al centro y el detalle del segmento enfocado', () => {
+    const { container } = render(
+      <GraficoDona titulo="Estados" etiquetaTotal="Órdenes" datos={[{ nombre: 'Pagadas', valor: 3 }, { nombre: 'Anuladas', valor: 1 }]} />,
+    )
+    const centro = container.querySelector('.grafico-dona-centro')
+    expect(centro.textContent).toBe('4Órdenes')
+    fireEvent.mouseEnter(screen.getByText('Anuladas').closest('li'))
+    expect(centro.textContent).toBe('1Anuladas')
+    expect(container.querySelectorAll('.grafico-arco.atenuado').length).toBe(1)
+  })
+
+  it('mantiene el color de cada entidad aunque otra tenga cero', () => {
+    const { container } = render(<GraficoDona titulo="Estados" datos={[{ nombre: 'Pagadas', valor: 0 }, { nombre: 'Anuladas', valor: 2 }]} />)
+    const arcos = container.querySelectorAll('.grafico-arco')
+    expect(arcos.length).toBe(1)
+    expect(arcos[0].classList).toContain('serie-2')
+  })
+
+  it('agrupa en Otros cuando hay más de 8 partes', () => {
+    const muchas = Array.from({ length: 10 }, (_, i) => ({ nombre: `C${i}`, valor: 10 - i }))
+    render(<GraficoDona titulo="Muchas" datos={muchas} />)
+    const filas = within(screen.getByRole('list', { name: 'Muchas' })).getAllByRole('listitem')
+    expect(filas.length).toBe(8)
+    expect(filas[7].textContent).toContain('Otros')
   })
 
   it('avisa cuando no hay datos', () => {
-    render(<BarraSegmentada titulo="Estados" partes={[{ nombre: 'Pagadas', valor: 0 }]} />)
+    render(<GraficoDona titulo="Estados" datos={[{ nombre: 'Pagadas', valor: 0 }]} />)
     expect(screen.getByText('Sin datos para mostrar.')).toBeTruthy()
   })
 })

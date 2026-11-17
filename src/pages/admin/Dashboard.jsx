@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useApi, Estado } from '../../api.jsx'
 import { formatearPrecio, formatearPrecioCorto, ultimosMeses } from '../../utils/formato.js'
-import { GraficoBarras, GraficoColumnas } from '../../components/Graficos.jsx'
+import { GraficoBarras, GraficoLineas } from '../../components/Graficos.jsx'
 
 const accesos = [
   { to: '/admin/productos/nuevo', texto: 'Nuevo producto' },
@@ -82,7 +82,7 @@ function Dashboard() {
 
       <div className="row g-3 mb-4">
         <div className="col-lg-7">
-          <GraficoColumnas
+          <GraficoLineas
             titulo="Ventas por mes"
             descripcion="Monto de las órdenes pagadas en los últimos 6 meses"
             datos={ventasPorMes}

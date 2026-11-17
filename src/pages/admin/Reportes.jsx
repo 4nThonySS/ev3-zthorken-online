@@ -1,6 +1,6 @@
 import { useApi, Estado } from '../../api.jsx'
-import { formatearPrecio } from '../../utils/formato.js'
-import { BarraSegmentada, GraficoBarras } from '../../components/Graficos.jsx'
+import { formatearPrecio, formatearPrecioCorto } from '../../utils/formato.js'
+import { GraficoBarras, GraficoDona } from '../../components/Graficos.jsx'
 
 const porMayor = (a, b) => b.valor - a.valor
 
@@ -32,10 +32,11 @@ function Reportes() {
     { titulo: 'Unidades vendidas', valor: unidadesVendidas },
   ]
 
-  const porCategoria = categorias.map((c) => {
+  const porCategoria = categorias.map((c, i) => {
     const lista = productos.filter((p) => p.categoriaId === c.id)
     return {
       ...c,
+      serie: i + 1,
       productos: lista.length,
       stock: lista.reduce((suma, p) => suma + p.stock, 0),
       valorStock: lista.reduce((suma, p) => suma + p.precio * p.stock, 0),
@@ -46,12 +47,12 @@ function Reportes() {
   })
 
   const graficoVentas = porCategoria
-    .map((c) => ({ id: c.id, nombre: c.nombre, valor: c.monto, detalle: `${c.unidades} unidades vendidas` }))
+    .map((c) => ({ id: c.id, serie: c.serie, nombre: c.nombre, valor: c.monto, detalle: `${c.unidades} unidades vendidas` }))
     .sort(porMayor)
   const graficoMasVendidos = masVendidos
     .map((v) => ({ nombre: v.nombre, valor: v.unidades, detalle: formatearPrecio(v.monto) }))
   const graficoStock = porCategoria
-    .map((c) => ({ id: c.id, nombre: c.nombre, valor: c.valorStock, detalle: `${c.stock} unidades en ${c.productos} productos` }))
+    .map((c) => ({ id: c.id, serie: c.serie, nombre: c.nombre, valor: c.valorStock, detalle: `${c.stock} unidades en ${c.productos} productos` }))
     .sort(porMayor)
   const estados = [
     { nombre: 'Pagadas', valor: ordenes.length },
@@ -78,12 +79,14 @@ function Reportes() {
       <h2 className="h5">Gráficos</h2>
       <div className="row g-3 mb-4">
         <div className="col-lg-6">
-          <GraficoBarras
+          <GraficoDona
             titulo="Ventas por categoría"
             descripcion="Monto vendido en órdenes pagadas"
             datos={graficoVentas}
             formato={formatearPrecio}
+            formatoCentro={formatearPrecioCorto}
             vacio="Sin ventas registradas."
+            etiquetaTotal="Vendido"
           />
         </div>
         <div className="col-lg-6">
@@ -96,18 +99,21 @@ function Reportes() {
           />
         </div>
         <div className="col-lg-6">
-          <GraficoBarras
+          <GraficoDona
             titulo="Valor del inventario por categoría"
             descripcion="Precio normal por unidades en stock"
             datos={graficoStock}
             formato={formatearPrecio}
+            formatoCentro={formatearPrecioCorto}
+            etiquetaTotal="En stock"
           />
         </div>
         <div className="col-lg-6">
-          <BarraSegmentada
+          <GraficoDona
             titulo="Órdenes por estado"
             descripcion="Pagadas frente a anuladas"
-            partes={estados}
+            datos={estados}
+            etiquetaTotal="Órdenes"
           />
         </div>
       </div>

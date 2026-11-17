@@ -40,8 +40,10 @@ Para volver a los datos iniciales, reinicia el backend (perfil `dev`, base H2 en
 
 **Gráficos del panel** (componentes propios en `src/components/Graficos.jsx`, sin librerías externas; muestran el detalle al pasar el mouse o con Tab):
 
-- **Dashboard:** ventas por mes de los últimos 6 meses y productos con menos stock, con los críticos marcados.
-- **Reportes:** ventas por categoría, top 5 productos más vendidos, valor del inventario por categoría y órdenes pagadas frente a anuladas. Las tablas de abajo muestran los mismos datos en detalle.
+Son de tres tipos: **líneas**, **dona** y **barras**.
+
+- **Dashboard:** gráfico de líneas con las ventas de los últimos 6 meses y gráfico de barras con los productos con menos stock, con los críticos marcados.
+- **Reportes:** donas de ventas por categoría, valor del inventario por categoría y órdenes pagadas frente a anuladas (total al centro, leyenda con porcentajes; cada categoría mantiene su color) y gráfico de barras con el top 5 de productos más vendidos. Las tablas de abajo muestran los mismos datos en detalle.
 
 ## Estructura
 
